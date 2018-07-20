@@ -16,7 +16,7 @@
 			MiniAdpter.init(false,true);
 
 			//初始化引擎
-			Laya.init(600, 400);
+			Laya.init(600, 600);
 			
 			//激活资源版本控制
             //ResourceVersion.enable("version.json", Handler.create(this, beginLoad), ResourceVersion.FILENAME_VERSION);

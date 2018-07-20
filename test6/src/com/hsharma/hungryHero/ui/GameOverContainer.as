@@ -24,6 +24,7 @@ package com.hsharma.hungryHero.ui
 	import laya.display.Sprite;
 	import laya.events.Event;
 	import laya.ui.Label;
+	import wx;
 	
 	public class GameOverContainer extends Sprite
 	{
@@ -193,6 +194,21 @@ package com.hsharma.hungryHero.ui
 			
 			this.alpha = 0;
 			this.visible = true;
+
+			wx.setUserCloudStorage({
+				KVDataList: [{ key: "score", value: this._score.toString() }],
+				success: function(res:Object):void {
+					console.log("setusercloud成功",res);
+					// 让子域更新当前用户的最高分，因为主域无法得到getUserCloadStorage;
+					var openDataContext = wx.getOpenDataContext();
+					openDataContext.postMessage({
+						id: 'getFriendCloudStorage'
+					});
+				},
+				fail: function(res:Object):void {
+					trace("setcloud失败",res);
+				}
+			});
 		}
 		
 		/**

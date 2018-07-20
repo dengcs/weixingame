@@ -1359,12 +1359,16 @@ var LayaUISample=(function(){
 			this.rankSprite2=new Sprite();
 			var openDataContext=wx.getOpenDataContext();
 			var sharedCanvas=openDataContext.canvas;
+			console.log("dcs1",sharedCanvas.width,sharedCanvas.height);
 			this.rankTexture=new Texture(sharedCanvas);
 			this.rankTexture.bitmap.alwaysChange=true;
 			Laya.stage.addChild(this.rankSprite2);
+			console.log("dcs2",this.rankTexture.width,this.rankTexture.height);
+			var rx=(Laya.stage.width-this.rankTexture.width)/2;
+			var ry=(Laya.stage.height-this.rankTexture.height)/2;
 			Laya.timer.frameLoop(1,this,function(){
 				_$this.rankSprite2.graphics.clear();
-				_$this.rankSprite2.graphics.drawTexture(_$this.rankTexture,5,78,_$this.rankTexture.width,_$this.rankTexture.height);
+				_$this.rankSprite2.graphics.drawTexture(_$this.rankTexture,rx,ry,_$this.rankTexture.width,_$this.rankTexture.height);
 			});
 		}
 	}
@@ -1397,24 +1401,9 @@ var WXUtils=(function(){
 						}
 					});
 					wx.showShareMenu();
-					wx.setUserCloudStorage({
-						KVDataList:[{key:"score",value:"100" }],
-						success:function (res){
-							console.log("setusercloud成功",res);
-							var openDataContext=wx.getOpenDataContext();
-							openDataContext.postMessage({
-								id:'getFriendCloudStorage'
-							});
-						},
-						fail:function (res){
-							console.log("setcloud失败",res);
-						}
-					});
 					var openDataContext=wx.getOpenDataContext();
 					openDataContext.postMessage({
-						id:"getFriendCloudStorage",
-						text:'hello',
-						year:(new Date()).getFullYear()
+						id:"getFriendCloudStorage"
 					})
 				}
 			});
@@ -28369,6 +28358,19 @@ var GameOverContainer=(function(_super){
 		this.scoreText.text="SCORE: "+this._score.toString();
 		this.alpha=0;
 		this.visible=true;
+		wx.setUserCloudStorage({
+			KVDataList:[{key:"score",value:this._score.toString()}],
+			success:function (res){
+				console.log("setusercloud成功",res);
+				var openDataContext=wx.getOpenDataContext();
+				openDataContext.postMessage({
+					id:'getFriendCloudStorage'
+				});
+			},
+			fail:function (res){
+				console.log("setcloud失败",res);
+			}
+		});
 	}
 
 	/**

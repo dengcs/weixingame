@@ -439,7 +439,7 @@ var LayaUISample=(function(){
 	//private var label:Label;
 	function LayaUISample(){
 		MiniAdpter.init(false,true);
-		Laya.init(600,400);
+		Laya.init(600,600);
 		this.beginLoad();
 		new WXShareUtils();
 	}
@@ -461,7 +461,7 @@ var LayaUISample=(function(){
 //class sdk.WXShareUtils
 var WXShareUtils=(function(){
 	function WXShareUtils(){
-		this.view=null;
+		this.list=null;
 		var _$this=this;
 		wx.onMessage(
 		function(data){
@@ -477,36 +477,41 @@ var WXShareUtils=(function(){
 					})
 				}
 		});
-		var sharedCanvas=wx.getSharedCanvas();
-		var context=sharedCanvas.getContext('2d');
-		context.fillStyle='red'
-		context.fillRect(0,0,100,100);
 	}
 
 	__class(WXShareUtils,'sdk.WXShareUtils');
 	var __proto=WXShareUtils.prototype;
 	//}
+	__proto.sortScore=function(a,b){
+		return a.score < b.score;
+	}
+
 	__proto.drawRankList=function(res){
 		console.log("drawRankList",res);
-		if(this.view&&this.view.parent){
-			this.view.removeSelf();
+		if(this.list && this.list.parent){
+			this.list.removeSelf();
 		}
-		this.view=new Sprite();
-		Laya.stage.addChild(this.view);
-		for(var i=0;i<res.data.length;i++){
-			var data=res.data[i];
-			var rb=new RBaseUI();
-			rb.y=i*70;
-			this.view.addChild(rb);
-			rb.name_txt.text=data.nickname;
-			var kv;
-			for(var $each_kv in data.KVDataList){
-				kv=data.KVDataList[$each_kv];
-				if(kv.key=="score"){
-					rb.v_txt.text=kv.value;
-				}
+		this.list=new List();
+		this.list.itemRender=RBaseUI;
+		this.list.repeatX=1;
+		this.list.repeatY=4;
+		this.list.vScrollBarSkin="";
+		this.list.renderHandler=new Handler(this,updateItem);
+		Laya.stage.addChild(this.list);
+		var dataArray=[];
+		for(var i=0;i<res.data.length;i++){{
+				var data=res.data[i];
+				dataArray.push({"nickname":data.nickname,"score":data.KVDataList[0].value,"img":data.avatarUrl});
 			}
-			rb.h_img.skin=data.avatarUrl;
+			dataArray.sort(this.sortScore);
+			this.list.array=dataArray;
+			this.list.x=(Laya.stage.width-this.list.width)/2;
+			this.list.y=0;
+		}
+		function updateItem (cell,index){
+			cell.name_txt.text=cell.dataSource.nickname;
+			cell.v_txt.text=cell.dataSource.score;
+			cell.h_img.skin=cell.dataSource.img;
 		}
 	}
 
@@ -39075,26 +39080,8 @@ var RBaseUI=(function(_super){
 		this.createView(RBaseUI.uiView);
 	}
 
-	RBaseUI.uiView={"type":"View","props":{"width":198,"height":69},"child":[{"type":"Rect","props":{"y":-3,"x":-6,"width":204,"lineWidth":1,"height":71,"fillColor":"#ff0000"}},{"type":"Image","props":{"y":8,"x":5,"width":60,"var":"h_img","height":60}},{"type":"Label","props":{"y":19,"x":77,"var":"name_txt","text":"label","fontSize":20,"color":"#ffffff"}},{"type":"Label","props":{"y":20,"x":135,"var":"v_txt","text":"label","fontSize":20,"color":"#ffffff"}}]};
+	RBaseUI.uiView={"type":"View","props":{"width":260,"height":69},"child":[{"type":"Rect","props":{"y":0,"x":0,"width":259,"lineWidth":1,"height":71,"fillColor":"#393739"}},{"type":"Image","props":{"y":3,"x":5,"width":60,"var":"h_img","height":60}},{"type":"Label","props":{"y":23,"x":77,"var":"name_txt","text":"label","fontSize":20,"color":"#ffffff","align":"left"}},{"type":"Label","props":{"y":23,"x":165,"var":"v_txt","text":"label","fontSize":20,"color":"#ffffff","align":"left"}}]};
 	return RBaseUI;
-})(View)
-
-
-//class ui.test.TestPageUI extends laya.ui.View
-var TestPageUI=(function(_super){
-	function TestPageUI(){
-		TestPageUI.__super.call(this);;
-	}
-
-	__class(TestPageUI,'ui.test.TestPageUI',_super);
-	var __proto=TestPageUI.prototype;
-	__proto.createChildren=function(){
-		laya.ui.Component.prototype.createChildren.call(this);
-		this.createView(TestPageUI.uiView);
-	}
-
-	TestPageUI.uiView={"type":"View","props":{"width":600,"height":400}};
-	return TestPageUI;
 })(View)
 
 
@@ -39620,65 +39607,12 @@ var TextArea=(function(_super){
 })(TextInput)
 
 
-//class view.TestView extends ui.test.TestPageUI
-var TestView=(function(_super){
-	function TestView(){
-		TestView.__super.call(this);
-		/*no*/this.btn.on("click",this,this.onBtnClick);
-		/*no*/this.btn2.on("click",this,this.onBtn2Click);
-	}
-
-	__class(TestView,'view.TestView',_super);
-	var __proto=TestView.prototype;
-	__proto.onBtnClick=function(e){
-		/*no*/this.radio.selectedIndex=1;
-		/*no*/this.clip.index=8;
-		/*no*/this.tab.selectedIndex=2;
-		/*no*/this.combobox.selectedIndex=0;
-		/*no*/this.check.selected=true;
-	}
-
-	__proto.onBtn2Click=function(e){
-		/*no*/this.box.dataSource={slider:50,scroll:80,progress:0.2,input:"This is a input",label:{color:"#ff0000",text:"Hello LayaAir"}};
-		var arr=[];
-		for (var i=0;i < 100;i++){
-			arr.push({label:"item "+i,clip:i % 9});
-		}
-		/*no*/this.list.array=arr;
-	}
-
-	//list.renderHandler=new Handler(this,onListRender);
-	__proto.onListRender=function(item,index){
-		var label=item.getChildByName("label");
-		if (index % 2){
-			label.color="#ff0000";
-			}else {
-			label.color="#000000";
-		}
-	}
-
-	return TestView;
-})(TestPageUI)
-
-
 	Laya.__init([LoaderManager,EventDispatcher,Render,Browser,View,WebGLContext2D,ShaderCompile,Timer,GraphicAnimation,LocalStorage,DrawText,AtlasGrid]);
 	/**LayaGameStart**/
 	new LayaUISample();
 
 })(window,document,Laya);
 
-
-/*
-1 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (11):warning:btn.on This variable is not defined.
-2 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (12):warning:btn2.on This variable is not defined.
-3 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (17):warning:radio.selectedIndex This variable is not defined.
-4 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (18):warning:clip.index This variable is not defined.
-5 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (19):warning:tab.selectedIndex This variable is not defined.
-6 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (20):warning:combobox.selectedIndex This variable is not defined.
-7 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (21):warning:check.selected This variable is not defined.
-8 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (29):warning:box.dataSource This variable is not defined.
-9 file:///d:/projects/wwwproj/weixingame/share/src/view/TestView.as (38):warning:list.array This variable is not defined.
-*/
 if (typeof define === 'function' && define.amd){
 	define('laya.core', ['require', "exports"], function(require, exports) {
         'use strict';

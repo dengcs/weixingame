@@ -78,15 +78,24 @@
 			Laya.stage.addChild(lb);*/
 			if(Browser.onMiniGame){
 			rankSprite2 = new Sprite();
-				var openDataContext = wx.getOpenDataContext();
-				var sharedCanvas = openDataContext.canvas;
+			var openDataContext = wx.getOpenDataContext();
+			var sharedCanvas = openDataContext.canvas;
+
+			trace("dcs1", sharedCanvas.width, sharedCanvas.height);
+
 			rankTexture=new Texture(sharedCanvas);
 			rankTexture.bitmap.alwaysChange=true;
 			Laya.stage.addChild(rankSprite2);
+
+			trace("dcs2", rankTexture.width, rankTexture.height);			
+
+			var rx = (Laya.stage.width - rankTexture.width)/2;
+			var ry = (Laya.stage.height - rankTexture.height)/2;
+
 			Laya.timer.frameLoop(1, this, function (){
 				// rankTexture.bitmap.alwaysChange = true;//小游戏使用，非常费，每帧刷新
 				rankSprite2.graphics.clear();
-				rankSprite2.graphics.drawTexture(rankTexture, 5, 78, rankTexture.width, rankTexture.height);
+				rankSprite2.graphics.drawTexture(rankTexture, rx, ry, rankTexture.width, rankTexture.height);
 			});
 			}
 		}
