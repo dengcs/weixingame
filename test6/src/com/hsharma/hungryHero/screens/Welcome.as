@@ -50,16 +50,7 @@ package com.hsharma.hungryHero.screens
 		
 		/** Hero artwork. */
 		private var hero:Image;
-
-		/** About text field. */
-		private var aboutText:StarlingTextField;
-		
-		/** hsharma.com button. */
-		private var hsharmaBtn:Button;
-		
-		/** Starling Framework button. */
-		private var starlingBtn:Button;
-		
+				
 		/** Back button. */
 		private var backBtn:Button;
 		
@@ -135,34 +126,7 @@ package com.hsharma.hungryHero.screens
 			this.addChild(aboutBtn);
 			
 			// ABOUT ELEMENTS
-			//fontRegular = Fonts.getFont("Regular");
-			
-			aboutText = new StarlingTextField(480, 600, "", "", 20, "#ffffff");
-			aboutText.text = "Hungry Hero is a free and open source game built on html5 using spriteflexjs.\n\nhttp://www.hungryherogame.com\n\n" +
-				" The concept is very simple. The hero is pretty much always hungry and you need to feed him with food." +
-				" You score when your Hero eats food.\n\nThere are different obstacles that fly in with a \"Look out!\"" +
-				" caution before they appear. Avoid them at all costs. You only have 5 lives. Try to score as much as possible and also" +
-				" try to travel the longest distance.";
-			aboutText.x = 60;
-			aboutText.y = 230;
-			//aboutText.hAlign = HAlign.CENTER;
-			//aboutText.vAlign = VAlign.TOP;
-			aboutText.height = aboutText.height + 30;
-			this.addChild(aboutText);
-			
-			hsharmaBtn = new Button("about_hsharmaLogo");
-			//Assets.getAtlas().getTexture(hsharmaBtn.graphics,"about_hsharmaLogo")
-			hsharmaBtn.x = aboutText.x;
-			hsharmaBtn.y = aboutText.y+aboutText.height;//.bounds.bottom;
-			hsharmaBtn.on(Event.CLICK, this,onHsharmaBtnClick);
-			this.addChild(hsharmaBtn);
-			
-			starlingBtn = new Button("about_starlingLogo");
-			//Assets.getAtlas().getTexture(starlingBtn.graphics,"about_starlingLogo")
-			starlingBtn.x = aboutText.x + aboutText.width - starlingBtn.width;//= aboutText.bounds.right - starlingBtn.width;
-			starlingBtn.y = aboutText.y + aboutText.height;//= aboutText.bounds.bottom;
-			starlingBtn.on(Event.CLICK,this, onStarlingBtnClick);
-			//this.addChild(starlingBtn);
+			//fontRegular = Fonts.getFont("Regular");			
 			
 			backBtn = new Button("about_backButton");
 			//Assets.getAtlas().getTexture(backBtn.graphics,"about_backButton")
@@ -184,26 +148,6 @@ package com.hsharma.hungryHero.screens
 			}
 			
 			initialize();
-		}
-		
-		/**
-		 * On credits click on hsharma.com image. 
-		 * @param event
-		 * 
-		 */
-		private function onHsharmaBtnClick(event:Event):void
-		{
-			//navigateToURL(new URLRequest("http://www.hsharma.com/"), "_blank");
-		}
-		
-		/**
-		 * On credits click on Starling Framework image. 
-		 * @param event
-		 * 
-		 */
-		private function onStarlingBtnClick(event:Event):void
-		{
-			//navigateToURL(new URLRequest("http://www.gamua.com/starling"), "_blank");
 		}
 		
 		/**
@@ -242,9 +186,6 @@ package com.hsharma.hungryHero.screens
 			// playBtn.visible = false;
 			// aboutBtn.visible = false;
 			
-			// aboutText.visible = true;
-			// hsharmaBtn.visible = true;
-			// starlingBtn.visible = true;
 			// backBtn.visible = true;
 			
 			wx.shareAppMessage({
@@ -276,9 +217,6 @@ package com.hsharma.hungryHero.screens
 			playBtn.visible = true;
 			aboutBtn.visible = true;
 			
-			aboutText.visible = false;
-			hsharmaBtn.visible = false;
-			starlingBtn.visible = false;
 			backBtn.visible = false;
 			
 			hero.x = -hero.width;

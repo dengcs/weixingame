@@ -28057,12 +28057,6 @@ var Welcome=(function(_super){
 		this.aboutBtn=null;
 		/**Hero artwork. */
 		this.hero=null;
-		/**About text field. */
-		this.aboutText=null;
-		/**hsharma.com button. */
-		this.hsharmaBtn=null;
-		/**Starling Framework button. */
-		this.starlingBtn=null;
 		/**Back button. */
 		this.backBtn=null;
 		/**Screen mode-"welcome" or "about". */
@@ -28113,25 +28107,6 @@ var Welcome=(function(_super){
 		this.aboutBtn.y=460;
 		this.aboutBtn.on("click",this,this.onAboutClick);
 		this.addChild(this.aboutBtn);
-		this.aboutText=new StarlingTextField(480,600,"","",20,"#ffffff");
-		this.aboutText.text="Hungry Hero is a free and open source game built on html5 using spriteflexjs.\n\nhttp://www.hungryherogame.com\n\n"+
-		" The concept is very simple. The hero is pretty much always hungry and you need to feed him with food."+
-		" You score when your Hero eats food.\n\nThere are different obstacles that fly in with a \"Look out!\""+
-		" caution before they appear. Avoid them at all costs. You only have 5 lives. Try to score as much as possible and also"+
-		" try to travel the longest distance.";
-		this.aboutText.x=60;
-		this.aboutText.y=230;
-		this.aboutText.height=this.aboutText.height+30;
-		this.addChild(this.aboutText);
-		this.hsharmaBtn=new Button("about_hsharmaLogo");
-		this.hsharmaBtn.x=this.aboutText.x;
-		this.hsharmaBtn.y=this.aboutText.y+this.aboutText.height;
-		this.hsharmaBtn.on("click",this,this.onHsharmaBtnClick);
-		this.addChild(this.hsharmaBtn);
-		this.starlingBtn=new Button("about_starlingLogo");
-		this.starlingBtn.x=this.aboutText.x+this.aboutText.width-this.starlingBtn.width;
-		this.starlingBtn.y=this.aboutText.y+this.aboutText.height;
-		this.starlingBtn.on("click",this,this.onStarlingBtnClick);
 		this.backBtn=new Button("about_backButton");
 		this.backBtn.x=660;
 		this.backBtn.y=350;
@@ -28151,18 +28126,6 @@ var Welcome=(function(_super){
 		this.initialize();
 	}
 
-	/**
-	*On credits click on hsharma.com image.
-	*@param event
-	*
-	*/
-	__proto.onHsharmaBtnClick=function(event){}
-	/**
-	*On credits click on Starling Framework image.
-	*@param event
-	*
-	*/
-	__proto.onStarlingBtnClick=function(event){}
 	/**
 	*On play button click.
 	*@param event
@@ -28209,9 +28172,6 @@ var Welcome=(function(_super){
 		this.hero.visible=true;
 		this.playBtn.visible=true;
 		this.aboutBtn.visible=true;
-		this.aboutText.visible=false;
-		this.hsharmaBtn.visible=false;
-		this.starlingBtn.visible=false;
 		this.backBtn.visible=false;
 		this.hero.x=-this.hero.width;
 		this.hero.y=100;
