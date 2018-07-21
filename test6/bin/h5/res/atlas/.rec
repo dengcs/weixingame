@@ -1,47 +1,13 @@
 D .
-R DDAF9644 bgLayer1.jpg
-R 7E269716 bgWelcome.jpg
-D comp
-P D12221A9 bg.png
-P 9401CC40 blank.png
-P B03390E5 btn_close.png
-P 1F3929EA button.png
-P 6CC6DF97 checkbox.png
-P FB94CCF2 clip_num.png
-P F7B6B7D7 clip_selectBox.png
-P 755271AE clip_tree_arrow.png
-P 859FD34C clip_tree_folder.png
-P A0E3B8F9 combobox.png
-P 9EDA959E hscroll$bar.png
-P 1AB768D4 hscroll$down.png
-P 685261D3 hscroll$up.png
-P 274B8076 hscroll.png
-P E466EB1C hslider$bar.png
-P C4BECA54 hslider.png
-P 5EDC128C html.png
-P ACFFCCCF image.png
-P 5EDC128C label.png
-P 5EDC128C linkbutton.png
-P 9E4DD730 progress$bar.png
-P 3FD78E12 progress.png
-P BF898D6A radio.png
-P BF898D6A radiogroup.png
-P 8CFD9D35 tab.png
-P BDA71F88 textarea.png
-P BDA71F88 textinput.png
-P 52107B89 vscroll$bar.png
-P E26B933E vscroll$down.png
-P B9680947 vscroll$up.png
-P 7E990267 vscroll.png
-P E466EB1C vslider$bar.png
-P 2BFF7046 vslider.png
 D mySpritesheet
 P 72B539A4 about_backButton.png
 P 8332CBA6 about_hsharmaLogo.png
 P B1BA3CF7 about_starlingLogo.png
+R DDAF9644 bgLayer1.jpg
 R C77F270B bgLayer2.png
 R C7FB171F bgLayer3.png
 R C697B824 bgLayer4.png
+R 7E269716 bgWelcome.jpg
 P 6D4B6C10 fly_0001.png
 P CB4A10FC fly_0002.png
 P 051100A3 fly_0003.png
@@ -98,3 +64,9 @@ P A557168F welcome_aboutButton.png
 P 8FBDD71F welcome_hero.png
 P F6EFDF31 welcome_playButton.png
 P AF7E6CBE welcome_title.png
+D pauseDialog
+P E93034AA btn_close.png
+R F4D29C0B img_bj.png
+P ED68ECAF img_home.png
+P 991D9A3B img_restart.png
+P 21FEE61C img_run.png

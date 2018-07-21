@@ -875,7 +875,7 @@ var GameConstants=(function(){
 	GameConstants.OBSTACLE_SPEED=300;
 	GameConstants.stageWidth=1024;
 	__static(GameConstants,
-	['stageHeight',function(){return this.stageHeight=1024 *9 / 16;}
+	['stageHeight',function(){return this.stageHeight=1024 *3 / 4;}
 	]);
 	return GameConstants;
 })()
@@ -1345,7 +1345,7 @@ var LayaUISample=(function(){
 	__class(LayaUISample,'LayaUISample');
 	var __proto=LayaUISample.prototype;
 	__proto.beginLoad=function(){
-		Laya.loader.load("res/atlas/mySpritesheet.atlas",Handler.create(this,this.onLoaded));
+		Laya.loader.load(["res/atlas/mySpritesheet.atlas","res/atlas/pauseDialog.atlas"],Handler.create(this,this.onLoaded));
 	}
 
 	__proto.onLoaded=function(){
@@ -27107,6 +27107,7 @@ var InGame=(function(_super){
 		this.startButton=null;
 		/**Tween object for game over container. */
 		this.tween_gameOverContainer=null;
+		this.pauseDialog=null;
 		InGame.__super.call(this);
 		this.visible=false;
 		this.on("added",this,this.onAddedToStage);
@@ -27173,8 +27174,14 @@ var InGame=(function(_super){
 	*
 	*/
 	__proto.onPauseButtonClick=function(event){
-		if (this.gamePaused)this.gamePaused=false;
-		else this.gamePaused=true;
+		if (this.gamePaused){
+			this.gamePaused=false;
+			this.pauseDialog.close();
+		}
+		else{
+			this.gamePaused=true;
+			this.pauseDialog.show();
+		}
 		this.bg.gamePaused=this.gamePaused;
 	}
 
@@ -27195,6 +27202,7 @@ var InGame=(function(_super){
 		this.gameOverContainer=new GameOverContainer();
 		this.gameOverContainer.on("changeScreen",this,this.playAgain);
 		this.addChild(this.gameOverContainer);
+		this.pauseDialog=new PauseDialog();
 	}
 
 	/**
@@ -30328,6 +30336,207 @@ var Stage=(function(_super){
 	['_wgColor',function(){return this._wgColor=[0,0,0,1];}
 	]);
 	return Stage;
+})(Sprite)
+
+
+/**
+*<code>DialogManager</code> 对话框管理容器，所有的对话框都在该容器内，并且受管理器管理。
+*任意对话框打开和关闭，都会出发管理类的open和close事件
+*可以通过UIConfig设置弹出框背景透明度，模式窗口点击边缘是否关闭，点击窗口是否切换层次等
+*通过设置对话框的zOrder属性，可以更改弹出的层次
+*/
+//class laya.ui.DialogManager extends laya.display.Sprite
+var DialogManager=(function(_super){
+	function DialogManager(){
+		/**锁屏层*/
+		this.lockLayer=null;
+		/**@private 全局默认弹出对话框效果，可以设置一个效果代替默认的弹出效果，如果不想有任何效果，可以赋值为null*/
+		this.popupEffect=function(dialog){
+			dialog.scale(1,1);
+			Tween.from(dialog,{x:Laya.stage.width / 2,y:Laya.stage.height / 2,scaleX:0,scaleY:0},300,Ease.backOut,Handler.create(this,this.doOpen,[dialog]));
+		}
+		/**@private 全局默认关闭对话框效果，可以设置一个效果代替默认的关闭效果，如果不想有任何效果，可以赋值为null*/
+		this.closeEffect=function(dialog,type){
+			Tween.to(dialog,{x:Laya.stage.width / 2,y:Laya.stage.height / 2,scaleX:0,scaleY:0},300,Ease.strongOut,Handler.create(this,this.doClose,[dialog,type]));
+		}
+		DialogManager.__super.call(this);
+		this.maskLayer=new Sprite();
+		this.popupEffectHandler=new Handler(this,this.popupEffect);
+		this.closeEffectHandler=new Handler(this,this.closeEffect);
+		this.mouseEnabled=this.maskLayer.mouseEnabled=true;
+		this.zOrder=1000;
+		Laya.stage.addChild(this);
+		Laya.stage.on("resize",this,this._onResize);
+		if (UIConfig.closeDialogOnSide)this.maskLayer.on("click",this,this._closeOnSide);
+		this._onResize(null);
+	}
+
+	__class(DialogManager,'laya.ui.DialogManager',_super);
+	var __proto=DialogManager.prototype;
+	__proto._closeOnSide=function(){
+		var dialog=this.getChildAt(this.numChildren-1);
+		if ((dialog instanceof laya.ui.Dialog ))dialog.close("side");
+	}
+
+	/**设置锁定界面，如果为空则什么都不显示*/
+	__proto.setLockView=function(value){
+		if (!this.lockLayer){
+			this.lockLayer=new Box();
+			this.lockLayer.mouseEnabled=true;
+			this.lockLayer.size(Laya.stage.width,Laya.stage.height);
+		}
+		this.lockLayer.removeChildren();
+		if (value){
+			value.centerX=value.centerY=0;
+			this.lockLayer.addChild(value);
+		}
+	}
+
+	/**@private */
+	__proto._onResize=function(e){
+		var width=this.maskLayer.width=Laya.stage.width;
+		var height=this.maskLayer.height=Laya.stage.height;
+		if (this.lockLayer)this.lockLayer.size(width,height);
+		this.maskLayer.graphics.clear();
+		this.maskLayer.graphics.drawRect(0,0,width,height,UIConfig.popupBgColor);
+		this.maskLayer.alpha=UIConfig.popupBgAlpha;
+		for (var i=this.numChildren-1;i >-1;i--){
+			var item=this.getChildAt(i);
+			if (item.popupCenter)this._centerDialog(item);
+		}
+	}
+
+	__proto._centerDialog=function(dialog){
+		dialog.x=Math.round(((Laya.stage.width-dialog.width)>> 1)+dialog.pivotX);
+		dialog.y=Math.round(((Laya.stage.height-dialog.height)>> 1)+dialog.pivotY);
+	}
+
+	/**
+	*显示对话框(非模式窗口类型)。
+	*@param dialog 需要显示的对象框 <code>Dialog</code> 实例。
+	*@param closeOther 是否关闭其它对话框，若值为ture，则关闭其它的对话框。
+	*@param showEffect 是否显示弹出效果
+	*/
+	__proto.open=function(dialog,closeOther,showEffect){
+		(closeOther===void 0)&& (closeOther=false);
+		(showEffect===void 0)&& (showEffect=false);
+		if (closeOther)this._closeAll();
+		if (dialog.popupCenter)this._centerDialog(dialog);
+		this.addChild(dialog);
+		if (dialog.isModal || this._$P["hasZorder"])this.timer.callLater(this,this._checkMask);
+		if (showEffect && dialog.popupEffect !=null)dialog.popupEffect.runWith(dialog);
+		else this.doOpen(dialog);
+		this.event("open");
+	}
+
+	/**
+	*执行打开对话框。
+	*@param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
+	*@param type 关闭的类型，默认为空
+	*/
+	__proto.doOpen=function(dialog){
+		dialog.onOpened();
+	}
+
+	/**
+	*锁定所有层，显示加载条信息，防止双击
+	*/
+	__proto.lock=function(value){
+		if (this.lockLayer){
+			if (value)this.addChild(this.lockLayer);
+			else this.lockLayer.removeSelf();
+		}
+	}
+
+	/**
+	*关闭对话框。
+	*@param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
+	*@param type 关闭的类型，默认为空
+	*@param showEffect 是否显示弹出效果
+	*/
+	__proto.close=function(dialog,type,showEffect){
+		(showEffect===void 0)&& (showEffect=false);
+		if (showEffect && dialog.closeEffect !=null)dialog.closeEffect.runWith([dialog,type]);
+		else this.doClose(dialog,type);
+		this.event("close");
+	}
+
+	/**
+	*执行关闭对话框。
+	*@param dialog 需要关闭的对象框 <code>Dialog</code> 实例。
+	*@param type 关闭的类型，默认为空
+	*/
+	__proto.doClose=function(dialog,type){
+		dialog.removeSelf();
+		dialog.isModal && this._checkMask();
+		dialog.closeHandler && dialog.closeHandler.runWith(type);
+		dialog.onClosed(type);
+	}
+
+	/**
+	*关闭所有的对话框。
+	*/
+	__proto.closeAll=function(){
+		this._closeAll();
+		this.event("close");
+	}
+
+	/**@private */
+	__proto._closeAll=function(){
+		for (var i=this.numChildren-1;i >-1;i--){
+			var item=this.getChildAt(i);
+			if (item && item.close !=null){
+				this.doClose(item);
+			}
+		}
+	}
+
+	/**
+	*根据组获取所有对话框
+	*@param group 组名称
+	*@return 对话框数组
+	*/
+	__proto.getDialogsByGroup=function(group){
+		var arr=[];
+		for (var i=this.numChildren-1;i >-1;i--){
+			var item=this.getChildAt(i);
+			if (item && item.group===group){
+				arr.push(item);
+			}
+		}
+		return arr;
+	}
+
+	/**
+	*根据组关闭所有弹出框
+	*@param group 需要关闭的组名称
+	*@return 需要关闭的对话框数组
+	*/
+	__proto.closeByGroup=function(group){
+		var arr=[];
+		for (var i=this.numChildren-1;i >-1;i--){
+			var item=this.getChildAt(i);
+			if (item && item.group===group){
+				item.close();
+				arr.push(item);
+			}
+		}
+		return arr;
+	}
+
+	/**@private 发生层次改变后，重新检查遮罩层是否正确*/
+	__proto._checkMask=function(){
+		this.maskLayer.removeSelf();
+		for (var i=this.numChildren-1;i >-1;i--){
+			var dialog=this.getChildAt(i);
+			if (dialog && dialog.isModal){
+				this.addChildAt(this.maskLayer,i);
+				return;
+			}
+		}
+	}
+
+	return DialogManager;
 })(Sprite)
 
 
@@ -41979,30 +42188,331 @@ var SoundButton=(function(_super){
 })(Button)
 
 
-//class ui.test.TestPageUI extends laya.ui.View
-var TestPageUI=(function(_super){
-	function TestPageUI(){
-		this.btn=null;
-		this.clip=null;
-		this.combobox=null;
-		this.tab=null;
-		this.list=null;
-		this.btn2=null;
-		this.check=null;
-		this.radio=null;
-		this.box=null;
-		TestPageUI.__super.call(this);
+/**
+*<code>Dialog</code> 组件是一个弹出对话框，实现对话框弹出，拖动，模式窗口功能。
+*可以通过UIConfig设置弹出框背景透明度，模式窗口点击边缘是否关闭等
+*通过设置zOrder属性，可以更改弹出的层次
+*通过设置popupEffect和closeEffect可以设置弹出效果和关闭效果，如果不想有任何弹出关闭效果，可以设置前述属性为空
+*
+*@example <caption>以下示例代码，创建了一个 <code>Dialog</code> 实例。</caption>
+*package
+*{
+	*import laya.ui.Dialog;
+	*import laya.utils.Handler;
+	*public class Dialog_Example
+	*{
+		*private var dialog:Dialog_Instance;
+		*public function Dialog_Example()
+		*{
+			*Laya.init(640,800);//设置游戏画布宽高、渲染模式。
+			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+			*Laya.loader.load("resource/ui/btn_close.png",Handler.create(this,onLoadComplete));//加载资源。
+			*}
+		*private function onLoadComplete():void
+		*{
+			*dialog=new Dialog_Instance();//创建一个 Dialog_Instance 类的实例对象 dialog。
+			*dialog.dragArea="0,0,150,50";//设置 dialog 的拖拽区域。
+			*dialog.show();//显示 dialog。
+			*dialog.closeHandler=new Handler(this,onClose);//设置 dialog 的关闭函数处理器。
+			*}
+		*private function onClose(name:String):void
+		*{
+			*if (name==Dialog.CLOSE)
+			*{
+				*trace("通过点击 name 为"+name+"的组件，关闭了dialog。");
+				*}
+			*}
+		*}
+	*}
+*import laya.ui.Button;
+*import laya.ui.Dialog;
+*import laya.ui.Image;
+*class Dialog_Instance extends Dialog
+*{
+	*function Dialog_Instance():void
+	*{
+		*var bg:Image=new Image("resource/ui/bg.png");
+		*bg.sizeGrid="40,10,5,10";
+		*bg.width=150;
+		*bg.height=250;
+		*addChild(bg);
+		*var image:Image=new Image("resource/ui/image.png");
+		*addChild(image);
+		*var button:Button=new Button("resource/ui/btn_close.png");
+		*button.name=Dialog.CLOSE;//设置button的name属性值。
+		*button.x=0;
+		*button.y=0;
+		*addChild(button);
+		*}
+	*}
+*@example
+*Laya.init(640,800);//设置游戏画布宽高、渲染模式
+*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
+*var dialog;
+*Laya.loader.load("resource/ui/btn_close.png",laya.utils.Handler.create(this,loadComplete));//加载资源
+*(function (_super){//新建一个类Dialog_Instance继承自laya.ui.Dialog。
+	*function Dialog_Instance(){
+		*Dialog_Instance.__super.call(this);//初始化父类
+		*var bg=new laya.ui.Image("resource/ui/bg.png");//新建一个 Image 类的实例 bg 。
+		*bg.sizeGrid="10,40,10,5";//设置 bg 的网格信息。
+		*bg.width=150;//设置 bg 的宽度。
+		*bg.height=250;//设置 bg 的高度。
+		*this.addChild(bg);//将 bg 添加到显示列表。
+		*var image=new laya.ui.Image("resource/ui/image.png");//新建一个 Image 类的实例 image 。
+		*this.addChild(image);//将 image 添加到显示列表。
+		*var button=new laya.ui.Button("resource/ui/btn_close.png");//新建一个 Button 类的实例 bg 。
+		*button.name=laya.ui.Dialog.CLOSE;//设置 button 的 name 属性值。
+		*button.x=0;//设置 button 对象的属性 x 的值，用于控制 button 对象的显示位置。
+		*button.y=0;//设置 button 对象的属性 y 的值，用于控制 button 对象的显示位置。
+		*this.addChild(button);//将 button 添加到显示列表。
+		*};
+	*Laya.class(Dialog_Instance,"mypackage.dialogExample.Dialog_Instance",_super);//注册类Dialog_Instance。
+	*})(laya.ui.Dialog);
+*function loadComplete(){
+	*console.log("资源加载完成！");
+	*dialog=new mypackage.dialogExample.Dialog_Instance();//创建一个 Dialog_Instance 类的实例对象 dialog。
+	*dialog.dragArea="0,0,150,50";//设置 dialog 的拖拽区域。
+	*dialog.show();//显示 dialog。
+	*dialog.closeHandler=new laya.utils.Handler(this,onClose);//设置 dialog 的关闭函数处理器。
+	*}
+*function onClose(name){
+	*if (name==laya.ui.Dialog.CLOSE){
+		*console.log("通过点击 name 为"+name+"的组件，关闭了dialog。");
+		*}
+	*}
+*@example
+*import Dialog=laya.ui.Dialog;
+*import Handler=laya.utils.Handler;
+*class Dialog_Example {
+	*private dialog:Dialog_Instance;
+	*constructor(){
+		*Laya.init(640,800);//设置游戏画布宽高。
+		*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+		*Laya.loader.load("resource/ui/btn_close.png",Handler.create(this,this.onLoadComplete));//加载资源。
+		*}
+	*private onLoadComplete():void {
+		*this.dialog=new Dialog_Instance();//创建一个 Dialog_Instance 类的实例对象 dialog。
+		*this.dialog.dragArea="0,0,150,50";//设置 dialog 的拖拽区域。
+		*this.dialog.show();//显示 dialog。
+		*this.dialog.closeHandler=new Handler(this,this.onClose);//设置 dialog 的关闭函数处理器。
+		*}
+	*private onClose(name:string):void {
+		*if (name==Dialog.CLOSE){
+			*console.log("通过点击 name 为"+name+"的组件，关闭了dialog。");
+			*}
+		*}
+	*}
+*import Button=laya.ui.Button;
+*class Dialog_Instance extends Dialog {
+	*Dialog_Instance():void {
+		*var bg:laya.ui.Image=new laya.ui.Image("resource/ui/bg.png");
+		*bg.sizeGrid="40,10,5,10";
+		*bg.width=150;
+		*bg.height=250;
+		*this.addChild(bg);
+		*var image:laya.ui.Image=new laya.ui.Image("resource/ui/image.png");
+		*this.addChild(image);
+		*var button:Button=new Button("resource/ui/btn_close.png");
+		*button.name=Dialog.CLOSE;//设置button的name属性值。
+		*button.x=0;
+		*button.y=0;
+		*this.addChild(button);
+		*}
+	*}
+*/
+//class laya.ui.Dialog extends laya.ui.View
+var Dialog=(function(_super){
+	function Dialog(){
+		/**
+		*一个布尔值，指定对话框是否居中弹。
+		*<p>如果值为true，则居中弹出，否则，则根据对象坐标显示，默认为true。</p>
+		*/
+		this.popupCenter=true;
+		/**
+		*对话框被关闭时会触发的回调函数处理器。
+		*<p>回调函数参数为用户点击的按钮名字name:String。</p>
+		*/
+		this.closeHandler=null;
+		/**
+		*弹出对话框效果，可以设置一个效果代替默认的弹出效果，如果不想有任何效果，可以赋值为null
+		*全局默认弹出效果可以通过manager.popupEffect修改
+		*/
+		this.popupEffect=null;
+		/**
+		*关闭对话框效果，可以设置一个效果代替默认的关闭效果，如果不想有任何效果，可以赋值为null
+		*全局默认关闭效果可以通过manager.closeEffect修改
+		*/
+		this.closeEffect=null;
+		/**组名称*/
+		this.group=null;
+		/**是否是模式窗口*/
+		this.isModal=false;
+		/**@private */
+		this._dragArea=null;
+		Dialog.__super.call(this);
 	}
 
-	__class(TestPageUI,'ui.test.TestPageUI',_super);
-	var __proto=TestPageUI.prototype;
-	__proto.createChildren=function(){
-		laya.ui.Component.prototype.createChildren.call(this);
-		this.createView(TestPageUI.uiView);
+	__class(Dialog,'laya.ui.Dialog',_super);
+	var __proto=Dialog.prototype;
+	/**@inheritDoc */
+	__proto.initialize=function(){
+		this.popupEffect=Dialog.manager.popupEffectHandler;
+		this.closeEffect=Dialog.manager.closeEffectHandler;
+		this._dealDragArea();
+		this.on("click",this,this._onClick);
 	}
 
-	TestPageUI.uiView={"type":"View","child":[{"props":{"x":0,"y":0,"skin":"comp/bg.png","sizeGrid":"30,4,4,4","width":600,"height":400},"type":"Image"},{"props":{"x":41,"y":56,"skin":"comp/button.png","label":"点我赋值","width":150,"height":37,"sizeGrid":"4,4,4,4","var":"btn"},"type":"Button"},{"props":{"x":401,"y":56,"skin":"comp/clip_num.png","clipX":10,"var":"clip"},"type":"Clip"},{"props":{"x":220,"y":143,"skin":"comp/combobox.png","labels":"select1,select2,selecte3","selectedIndex":1,"sizeGrid":"4,20,4,4","width":200,"height":23,"var":"combobox"},"type":"ComboBox"},{"props":{"x":220,"y":96,"skin":"comp/tab.png","labels":"tab1,tab2,tab3","var":"tab"},"type":"Tab"},{"props":{"x":259,"y":223,"skin":"comp/vscroll.png","height":150},"type":"VScrollBar"},{"props":{"x":224,"y":223,"skin":"comp/vslider.png","height":150},"type":"VSlider"},{"type":"List","child":[{"type":"Box","child":[{"props":{"skin":"comp/label.png","text":"this is a list","x":26,"y":5,"width":78,"height":20,"fontSize":14,"name":"label"},"type":"Label"},{"props":{"x":0,"y":2,"skin":"comp/clip_num.png","clipX":10,"name":"clip"},"type":"Clip"}],"props":{"name":"render","x":0,"y":0,"width":112,"height":30}}],"props":{"x":452,"y":68,"width":128,"height":299,"vScrollBarSkin":"comp/vscroll.png","repeatX":1,"var":"list"}},{"props":{"x":563,"y":4,"skin":"comp/btn_close.png","name":"close"},"type":"Button"},{"props":{"x":41,"y":112,"skin":"comp/button.png","label":"点我赋值","width":150,"height":66,"sizeGrid":"4,4,4,4","labelSize":30,"labelBold":true,"var":"btn2"},"type":"Button"},{"props":{"x":220,"y":188,"skin":"comp/checkbox.png","label":"checkBox1","var":"check"},"type":"CheckBox"},{"props":{"x":220,"y":61,"skin":"comp/radiogroup.png","labels":"radio1,radio2,radio3","var":"radio"},"type":"RadioGroup"},{"type":"Panel","child":[{"props":{"skin":"comp/image.png"},"type":"Image"}],"props":{"x":299,"y":223,"width":127,"height":150,"vScrollBarSkin":"comp/vscroll.png"}},{"props":{"x":326,"y":188,"skin":"comp/checkbox.png","label":"checkBox2","labelColors":"#ff0000"},"type":"CheckBox"},{"type":"Box","child":[{"props":{"y":70,"skin":"comp/progress.png","width":150,"height":14,"sizeGrid":"4,4,4,4","name":"progress"},"type":"ProgressBar"},{"props":{"y":103,"skin":"comp/label.png","text":"This is a Label","width":137,"height":26,"fontSize":20,"name":"label"},"type":"Label"},{"props":{"y":148,"skin":"comp/textinput.png","text":"textinput","width":150,"name":"input"},"type":"TextInput"},{"props":{"skin":"comp/hslider.png","width":150,"name":"slider"},"type":"HSlider"},{"props":{"y":34,"skin":"comp/hscroll.png","width":150,"name":"scroll"},"type":"HScrollBar"}],"props":{"x":41,"y":197,"var":"box"}}],"props":{"width":600,"height":400}};
-	return TestPageUI;
+	/**@private */
+	__proto._dealDragArea=function(){
+		var dragTarget=this.getChildByName("drag");
+		if (dragTarget){
+			this.dragArea=dragTarget.x+","+dragTarget.y+","+dragTarget.width+","+dragTarget.height;
+			dragTarget.removeSelf();
+		}
+	}
+
+	/**
+	*@private (protected)
+	*对象的 <code>Event.CLICK</code> 点击事件侦听处理函数。
+	*/
+	__proto._onClick=function(e){
+		var btn=e.target;
+		if (btn){
+			switch (btn.name){
+				case "close":
+				case "cancel":
+				case "sure":
+				case "no":
+				case "ok":
+				case "yes":
+					this.close(btn.name);
+					break ;
+				}
+		}
+	}
+
+	/**
+	*显示对话框（以非模式窗口方式显示）。
+	*@param closeOther 是否关闭其它的对话框。若值为true则关闭其它对话框。
+	*@param showEffect 是否显示弹出效果
+	*/
+	__proto.show=function(closeOther,showEffect){
+		(closeOther===void 0)&& (closeOther=false);
+		(showEffect===void 0)&& (showEffect=true);
+		this._open(false,closeOther,showEffect);
+	}
+
+	/**
+	*显示对话框（以模式窗口方式显示）。
+	*@param closeOther 是否关闭其它的对话框。若值为true则关闭其它对话框。
+	*@param showEffect 是否显示弹出效果
+	*/
+	__proto.popup=function(closeOther,showEffect){
+		(closeOther===void 0)&& (closeOther=false);
+		(showEffect===void 0)&& (showEffect=true);
+		this._open(true,closeOther,showEffect);
+	}
+
+	/**@private */
+	__proto._open=function(modal,closeOther,showEffect){
+		Dialog.manager.lock(false);
+		this.isModal=modal;
+		Dialog.manager.open(this,closeOther,showEffect);
+	}
+
+	/**打开完成后，调用此方法（如果有弹出动画，则在动画完成后执行）*/
+	__proto.onOpened=function(){}
+	/**
+	*关闭对话框。
+	*@param type 如果是点击默认关闭按钮触发，则传入关闭按钮的名字(name)，否则为null。
+	*@param showEffect 是否显示关闭效果
+	*/
+	__proto.close=function(type,showEffect){
+		(showEffect===void 0)&& (showEffect=true);
+		Dialog.manager.close(this,type,showEffect);
+	}
+
+	/**关闭完成后，调用此方法（如果有关闭动画，则在动画完成后执行）
+	*@param type 如果是点击默认关闭按钮触发，则传入关闭按钮的名字(name)，否则为null。
+	*/
+	__proto.onClosed=function(type){}
+	/**@private */
+	__proto._onMouseDown=function(e){
+		var point=this.getMousePoint();
+		if (this._dragArea.contains(point.x,point.y))this.startDrag();
+		else this.stopDrag();
+	}
+
+	/**
+	*用来指定对话框的拖拽区域。默认值为"0,0,0,0"。
+	*<p><b>格式：</b>构成一个矩形所需的 x,y,width,heith 值，用逗号连接为字符串。
+	*例如："0,0,100,200"。
+	*</p>
+	*
+	*@see #includeExamplesSummary 请参考示例
+	*/
+	__getset(0,__proto,'dragArea',function(){
+		if (this._dragArea)return this._dragArea.toString();
+		return null;
+		},function(value){
+		if (value){
+			var a=UIUtils.fillArray([0,0,0,0],value,Number);
+			this._dragArea=new Rectangle(a[0],a[1],a[2],a[3]);
+			this.on("mousedown",this,this._onMouseDown);
+			}else {
+			this._dragArea=null;
+			this.off("mousedown",this,this._onMouseDown);
+		}
+	});
+
+	/**
+	*弹出框的显示状态；如果弹框处于显示中，则为true，否则为false;
+	*/
+	__getset(0,__proto,'isPopup',function(){
+		return this.parent !=null;
+	});
+
+	__getset(0,__proto,'zOrder',_super.prototype._$get_zOrder,function(value){
+		Laya.superSet(View,this,'zOrder',value);
+		Dialog.manager._checkMask();
+	});
+
+	/**对话框管理容器，所有的对话框都在该容器内，并且受管理器管，可以自定义自己的管理器，来更改窗口管理的流程。
+	*任意对话框打开和关闭，都会触发管理类的open和close事件*/
+	__getset(1,Dialog,'manager',function(){
+		return Dialog._manager=Dialog._manager|| new DialogManager();
+		},function(value){
+		Dialog._manager=value;
+	});
+
+	Dialog.setLockView=function(view){
+		Dialog.manager.setLockView(view);
+	}
+
+	Dialog.lock=function(value){
+		Dialog.manager.lock(value);
+	}
+
+	Dialog.closeAll=function(){
+		Dialog.manager.closeAll();
+	}
+
+	Dialog.getDialogsByGroup=function(group){
+		return Dialog.manager.getDialogsByGroup(group);
+	}
+
+	Dialog.closeByGroup=function(group){
+		return Dialog.manager.closeByGroup(group);
+	}
+
+	Dialog.CLOSE="close";
+	Dialog.CANCEL="cancel";
+	Dialog.SURE="sure";
+	Dialog.NO="no";
+	Dialog.OK="ok";
+	Dialog.YES="yes";
+	Dialog._manager=null;
+	return Dialog;
 })(View)
 
 
@@ -42528,45 +43038,38 @@ var Tab=(function(_super){
 })(UIGroup)
 
 
-//class view.TestView extends ui.test.TestPageUI
-var TestView=(function(_super){
-	function TestView(){
-		TestView.__super.call(this);
-		this.btn.on("click",this,this.onBtnClick);
-		this.btn2.on("click",this,this.onBtn2Click);
+//class ui.PauseDialogUI extends laya.ui.Dialog
+var PauseDialogUI=(function(_super){
+	function PauseDialogUI(){
+		PauseDialogUI.__super.call(this);;
 	}
 
-	__class(TestView,'view.TestView',_super);
-	var __proto=TestView.prototype;
-	__proto.onBtnClick=function(e){
-		this.radio.selectedIndex=1;
-		this.clip.index=8;
-		this.tab.selectedIndex=2;
-		this.combobox.selectedIndex=0;
-		this.check.selected=true;
+	__class(PauseDialogUI,'ui.PauseDialogUI',_super);
+	var __proto=PauseDialogUI.prototype;
+	__proto.createChildren=function(){
+		laya.ui.Component.prototype.createChildren.call(this);
+		this.createView(PauseDialogUI.uiView);
 	}
 
-	__proto.onBtn2Click=function(e){
-		this.box.dataSource={slider:50,scroll:80,progress:0.2,input:"This is a input",label:{color:"#ff0000",text:"Hello LayaAir"}};
-		var arr=[];
-		for (var i=0;i < 100;i++){
-			arr.push({label:"item "+i,clip:i % 9});
-		}
-		this.list.array=arr;
+	PauseDialogUI.uiView={"type":"Dialog","props":{"width":759,"height":452},"child":[{"type":"Image","props":{"y":0,"x":0,"skin":"pauseDialog/img_bj.png"},"child":[{"type":"Image","props":{"y":137,"x":39,"skin":"pauseDialog/img_home.png"}},{"type":"Image","props":{"y":133,"x":291,"skin":"pauseDialog/img_restart.png"}},{"type":"Image","props":{"y":136,"x":538,"skin":"pauseDialog/img_run.png"}},{"type":"Button","props":{"y":-22,"x":700,"stateNum":1,"skin":"pauseDialog/btn_close.png","name":"close"}}]}]};
+	return PauseDialogUI;
+})(Dialog)
+
+
+/**
+*...
+*@dengcs
+*/
+//class view.PauseDialog extends ui.PauseDialogUI
+var PauseDialog=(function(_super){
+	function PauseDialog(){
+		PauseDialog.__super.call(this);
+		this.dragArea="0,0,759,452";
 	}
 
-	//list.renderHandler=new Handler(this,onListRender);
-	__proto.onListRender=function(item,index){
-		var label=item.getChildByName("label");
-		if (index % 2){
-			label.color="#ff0000";
-			}else {
-			label.color="#000000";
-		}
-	}
-
-	return TestView;
-})(TestPageUI)
+	__class(PauseDialog,'view.PauseDialog',_super);
+	return PauseDialog;
+})(PauseDialogUI)
 
 
 	Laya.__init([EventDispatcher,LoaderManager,Browser,DrawText,GraphicAnimation,Render,View,WebGLContext2D,ShaderCompile,Timer,LocalStorage,AtlasGrid]);

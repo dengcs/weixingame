@@ -16,7 +16,6 @@
 	import laya.utils.Browser;
 	import laya.webgl.WebGL;
 	import sdk.WXUtils;
-	import view.TestView;
 	import laya.wx.mini.MiniAdpter;
 	import wx;
 	
@@ -43,7 +42,7 @@
 		
 		private function beginLoad():void {
 			//加载引擎需要的资源
-			Laya.loader.load("res/atlas/mySpritesheet.atlas", Handler.create(this, onLoaded));
+			Laya.loader.load(["res/atlas/mySpritesheet.atlas","res/atlas/pauseDialog.atlas"], Handler.create(this, onLoaded));
 		}
 		
 		private function onLoaded():void {

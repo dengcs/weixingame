@@ -35,6 +35,7 @@ package com.hsharma.hungryHero.screens
 	import laya.events.Event;
 	import laya.maths.Rectangle;
 	import laya.media.SoundManager;
+	import view.PauseDialog;
 	
 	
 	/**
@@ -234,6 +235,8 @@ package com.hsharma.hungryHero.screens
 		
 		/** Tween object for game over container. */
 		private var tween_gameOverContainer:Object;
+
+		private var pauseDialog:PauseDialog;
 		
 		// ------------------------------------------------------------------------------------------------------------
 		// METHODS
@@ -347,8 +350,16 @@ package com.hsharma.hungryHero.screens
 			//event.stopImmediatePropagation();
 			
 			// Pause or unpause the game.
-			if (gamePaused) gamePaused = false;
-			else gamePaused = true;
+			if (gamePaused)
+			{
+			 	gamePaused = false;				
+				pauseDialog.close();
+			}
+			else
+			{
+				gamePaused = true;
+				pauseDialog.show();
+			} 
 			
 			// Pause the background animation too.
 			bg.gamePaused = gamePaused;
@@ -373,6 +384,8 @@ package com.hsharma.hungryHero.screens
 			gameOverContainer = new GameOverContainer();
 			gameOverContainer.on(NavigationEvent.CHANGE_SCREEN,this, playAgain);
 			this.addChild(gameOverContainer);
+
+			pauseDialog = new PauseDialog();
 		}
 		
 		/**
