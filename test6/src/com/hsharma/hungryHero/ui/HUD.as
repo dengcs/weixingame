@@ -17,6 +17,9 @@ package com.hsharma.hungryHero.ui
 	import com.hsharma.hungryHero.StarlingTextField;
 	import laya.display.Sprite;
 	import laya.events.Event;
+	import laya.ui.Image;
+	import com.hsharma.hungryHero.Assets;
+	import laya.display.Stage;
 	
 	/**
 	 * This class handles the Heads Up Display for the game.
@@ -36,19 +39,19 @@ package com.hsharma.hungryHero.ui
 		private var _foodScore:int;
 		
 		/** Lives icon.  */		
-		private var livesLabel:StarlingTextField;
+		private var livesImg:Image;
 		
 		/** Lives TextField. */		
 		private var livesText:StarlingTextField;
 		
 		/** Distance icon. */		
-		private var distanceLabel:StarlingTextField;
+		//private var distanceLabel:StarlingTextField;
 		
 		/** Distance TextField. */		
-		private var distanceText:StarlingTextField;
+		//private var distanceText:StarlingTextField;
 		
 		/** Food Score icon. */
-		private var foodScoreLabel:StarlingTextField;
+		private var foodScoreImg:Image;
 		
 		/** Food Score TextField. */		
 		private var foodScoreText:StarlingTextField;
@@ -58,6 +61,10 @@ package com.hsharma.hungryHero.ui
 		
 		/** Font for score value. */		
 		//private var fontScoreValue:Font;
+
+		private var item1Img:Image;
+		private var item2Img:Image;
+		private var viewVideoImg:Image;
 		
 		public function HUD()
 		{
@@ -78,61 +85,100 @@ package com.hsharma.hungryHero.ui
 			//fontScoreValue = com.hsharma.hungryHero.Fonts.getFont("ScoreValue");
 			
 			// Lives label
-			livesLabel = new StarlingTextField(150, 20, "L I V E S", null, 20, "#ffffff");
+			livesImg = new Image(Assets.getTexture("img_life"));
 			//livesLabel.hAlign = HAlign.RIGHT;
-			//livesLabel.vAlign = VAlign.TOP;
-
-			livesLabel.x = 150;
-			livesLabel.y = 5;
-			this.addChild(livesLabel);
+			//livesLabel.vAlign = VAlign.TOP;			
+			livesImg.x = 150;
+			livesImg.y = 20;
+			livesImg.scale(0.5, 0.5);
+			this.addChild(livesImg);
 			
 			// Lives
-			livesText = new StarlingTextField(150, 75, "5", null, 20, "#ffffff");
+			livesText = new StarlingTextField(150, 20, "5", "Microsoft YaHei", 20, "#ffffff");
 			//livesText.hAlign = HAlign.RIGHT;
 			//livesText.vAlign = VAlign.TOP;
-			livesText.width = livesLabel.width;
 
-			livesText.x = Math.floor(livesLabel.x + livesLabel.width - livesText.width);
-			livesText.y = livesLabel.y + livesLabel.height;
+			livesText.x = Math.floor(livesImg.x + (livesImg.width*livesImg.scaleX)/2 - 20);
+			livesText.y = livesImg.y + 5;
 			this.addChild(livesText);
 			
 			// Distance label
-			distanceLabel = new StarlingTextField(150, 20, "D I S T A N C E", null, 20, "#ffffff");
+			//distanceLabel = new StarlingTextField(150, 20, "D I S T A N C E", null, 20, "#ffffff");
 			//distanceLabel.hAlign = HAlign.RIGHT;
 			//distanceLabel.vAlign = VAlign.TOP;
 
-			distanceLabel.x = Math.floor(GameConstants.stageWidth - distanceLabel.width - 10);
-			distanceLabel.y = 5;
-			this.addChild(distanceLabel);
+			//distanceLabel.x = Math.floor(GameConstants.stageWidth - distanceLabel.width - 10);
+			//distanceLabel.y = 5;
+			//this.addChild(distanceLabel);
 			
 			// Distance
-			distanceText = new StarlingTextField(150, 75, "0", null, 20, "#ffffff");
+			//distanceText = new StarlingTextField(150, 75, "0", null, 20, "#ffffff");
 			//distanceText.hAlign = HAlign.RIGHT;
 			//distanceText.vAlign = VAlign.TOP;
-			distanceText.width = distanceLabel.width;
+			//distanceText.width = distanceLabel.width;
 			
-			distanceText.x = Math.floor(distanceLabel.x + distanceLabel.width - distanceText.width);
-			distanceText.y = distanceLabel.y + distanceLabel.height;
-			this.addChild(distanceText);
+			//distanceText.x = Math.floor(distanceLabel.x + distanceLabel.width - distanceText.width);
+			//distanceText.y = distanceLabel.y + distanceLabel.height;
+			//this.addChild(distanceText);
 			
 			// Score label
-			foodScoreLabel = new StarlingTextField(150, 20, "S C O R E", null, 20, "#ffffff");
+			foodScoreImg = new Image(Assets.getTexture("img_score"));
 			//foodScoreLabel.hAlign = HAlign.RIGHT;
 			//foodScoreLabel.vAlign = VAlign.TOP;
 
-			foodScoreLabel.x = Math.floor(distanceLabel.x - foodScoreLabel.width - 50);
-			foodScoreLabel.y = 5;
-			this.addChild(foodScoreLabel);
+			foodScoreImg.x = 660;
+			foodScoreImg.y = 20;
+			foodScoreImg.scale(0.5, 0.5);
+			this.addChild(foodScoreImg);
 			
 			// Score
-			foodScoreText = new StarlingTextField(150, 75, "0", null, 20, "#ffffff");
+			foodScoreText = new StarlingTextField(150, 20, "0", "Microsoft YaHei", 20, "#ffffff");
 			//foodScoreText.hAlign = HAlign.RIGHT;
 			//foodScoreText.vAlign = VAlign.TOP;
-			foodScoreText.width = foodScoreLabel.width;
 			
-			foodScoreText.x = Math.floor(foodScoreLabel.x + foodScoreLabel.width - foodScoreText.width);
-			foodScoreText.y = foodScoreLabel.y + foodScoreLabel.height;
+			foodScoreText.x = Math.floor(foodScoreImg.x + (foodScoreImg.width*foodScoreImg.scaleX)/2 - 20);
+			foodScoreText.y = foodScoreImg.y + 5;
 			this.addChild(foodScoreText);
+ 
+			item1Img = new Image(Assets.getTexture("item6"));
+			item2Img = new Image(Assets.getTexture("item7"));
+			viewVideoImg = new Image(Assets.getTexture("img_view_video"));
+			viewVideoImg.x = 20;
+			viewVideoImg.scale(0.5, 0.5);
+			viewVideoImg.y = Laya.stage.height - viewVideoImg.height*viewVideoImg.scaleY - 20;
+			this.addChild(viewVideoImg);
+
+			item1Img.x = 50;
+			item1Img.y = viewVideoImg.y - viewVideoImg.height*viewVideoImg.scaleY - 5;
+
+			var circleImg1:Image = new Image(Assets.getTexture("img_circle"));
+			circleImg1.scale(0.5, 0.5);
+			circleImg1.x = 40;
+
+			var circleLab1:StarlingTextField = new StarlingTextField(20, 20, "3", "Microsoft YaHei", 20, "#ffffff");
+			circleLab1.x = circleImg1.width/4;
+			circleLab1.y = circleImg1.height/4;
+			circleImg1.addChild(circleLab1);
+
+			item1Img.addChild(circleImg1);
+
+			this.addChild(item1Img);
+
+			item2Img.x = item1Img.x + item1Img.width + 20;
+			item2Img.y = item1Img.y;
+
+			var circleImg2:Image = new Image(Assets.getTexture("img_circle"));
+			circleImg2.scale(0.5, 0.5);
+			circleImg2.x = 40;
+
+			var circleLab2:StarlingTextField = new StarlingTextField(20, 20, "1", "Microsoft YaHei", 20, "#ffffff");
+			circleLab2.x = circleImg2.width/4;
+			circleLab2.y = circleImg2.height/4;
+			circleImg2.addChild(circleLab2);
+
+			item2Img.addChild(circleImg2);
+
+			this.addChild(item2Img);
 		}
 
 		/**
@@ -152,12 +198,12 @@ package com.hsharma.hungryHero.ui
 		 * @return 
 		 * 
 		 */
-		public function get distance():int { return _distance; }
-		public function set distance(value:int):void
-		{
-			_distance = value;
-			distanceText.text = _distance.toString();
-		}
+		// public function get distance():int { return _distance; }
+		// public function set distance(value:int):void
+		// {
+		// 	_distance = value;
+		// 	distanceText.text = _distance.toString();
+		// }
 
 		/**
 		 * Food items score. 

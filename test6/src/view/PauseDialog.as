@@ -7,8 +7,6 @@ package view
 	 */
 	public class PauseDialog extends ui.PauseDialogUI{
 		public function PauseDialog(){
-			
-			this.dragArea = "0,0,759,452";
 		}
 	}
 

@@ -1330,13 +1330,11 @@ var Sounds=(function(){
 //class LayaUISample
 var LayaUISample=(function(){
 	function LayaUISample(){
-		this.rankSprite2=null;
-		this.rankTexture=null;
 		MiniAdpter.init(false);
 		Laya.init(1024,GameConstants.stageHeight,WebGL);
 		Laya.stage.alignH="center";
-		Laya.stage.alignV="top";
-		Laya.stage.scaleMode="fixedwidth"
+		Laya.stage.alignV="middle";
+		Laya.stage.scaleMode="exactfit";
 		Laya.stage.screenMode="horizontal";
 		new WXUtils();
 		ResourceVersion.enable("version.json",Handler.create(this,this.beginLoad),2);
@@ -1345,39 +1343,40 @@ var LayaUISample=(function(){
 	__class(LayaUISample,'LayaUISample');
 	var __proto=LayaUISample.prototype;
 	__proto.beginLoad=function(){
-		Laya.loader.load(["res/atlas/mySpritesheet.atlas","res/atlas/pauseDialog.atlas"],Handler.create(this,this.onLoaded));
+		Laya.loader.load(this.atlasUrls(),Handler.create(this,this.onLoaded));
 	}
 
 	__proto.onLoaded=function(){
-		var _$this=this;
 		var hb=new HungryHero1();
 		Laya.stage.addChild(hb);
 		var ani=new Animation();
 		Animation.createFrames(this.aniUrls("fly_000",1,6),"fly");
 		ani.play(0,true,"fly");
-		if(Browser.onMiniGame){
-			this.rankSprite2=new Sprite();
-			var openDataContext=wx.getOpenDataContext();
-			var sharedCanvas=openDataContext.canvas;
-			console.log("dcs1",sharedCanvas.width,sharedCanvas.height);
-			this.rankTexture=new Texture(sharedCanvas);
-			this.rankTexture.bitmap.alwaysChange=true;
-			Laya.stage.addChild(this.rankSprite2);
-			console.log("dcs2",this.rankTexture.width,this.rankTexture.height);
-			var rx=(Laya.stage.width-this.rankTexture.width)/2;
-			var ry=(Laya.stage.height-this.rankTexture.height)/2;
-			Laya.timer.frameLoop(1,this,function(){
-				_$this.rankSprite2.graphics.clear();
-				_$this.rankSprite2.graphics.drawTexture(_$this.rankTexture,rx,ry,_$this.rankTexture.width,_$this.rankTexture.height);
-			});
-		}
 	}
 
+	/*var hud:HUD=new HUD;
+	Laya.stage.addChild(hud);
+	var ll:StarlingTextField=new StarlingTextField(150,20,"L I V E S",null,20,"#ffffff");
+	ll.x=150;
+	ll.y=5;
+	Laya.stage.addChild(ll);
+	var lb:Label=new Label;
+	lb.text="fdsaf";
+	lb.color="#ffffff"
+	Laya.stage.addChild(lb);*/
 	__proto.aniUrls=function(aniName,start,end){
 		var urls=[];
 		for(var i=start;i<=end;i++){
 			urls.push("mySpritesheet/"+aniName+i+".png")
 		}
+		return urls;
+	}
+
+	__proto.atlasUrls=function(){
+		var urls=[];
+		urls.push("res/atlas/mySpritesheet.atlas");
+		urls.push("res/atlas/pauseDialog.atlas");
+		urls.push("res/atlas/gameOverDialog.atlas");
 		return urls;
 	}
 
@@ -22795,6 +22794,17 @@ var ShaderDefines2D=(function(_super){
 })(ShaderDefines$1)
 
 
+//class laya.webgl.shapes.Ellipse extends laya.webgl.shapes.BasePoly
+var Ellipse=(function(_super){
+	function Ellipse(x,y,width,height,color,borderWidth,borderColor){
+		Ellipse.__super.call(this,x,y,width,height,40,color,borderWidth,borderColor);
+	}
+
+	__class(Ellipse,'laya.webgl.shapes.Ellipse',_super);
+	return Ellipse;
+})(BasePoly)
+
+
 //class laya.webgl.shapes.Line extends laya.webgl.shapes.BasePoly
 var Line=(function(_super){
 	function Line(x,y,points,borderWidth,color){
@@ -27099,15 +27109,14 @@ var InGame=(function(_super){
 		this.touch=null;
 		/**HUD Container. */
 		this.hud=null;
-		/**GameOver Container. */
-		this.gameOverContainer=null;
 		/**Pause button. */
 		this.pauseButton=null;
 		/**Kick Off button in the beginning of the game .*/
 		this.startButton=null;
-		/**Tween object for game over container. */
-		this.tween_gameOverContainer=null;
+		//private var tween_gameOverContainer:Object;
 		this.pauseDialog=null;
+		this.gameOverDialog=null;
+		this.settleDialog=null;
 		InGame.__super.call(this);
 		this.visible=false;
 		this.on("added",this,this.onAddedToStage);
@@ -27149,8 +27158,9 @@ var InGame=(function(_super){
 		this.addChild(this.pauseButton);
 		this.startButton=new Button("startButton");
 		this.startButton.fontColor=0xffffff;
-		this.startButton.x=1024/2-this.startButton.width/2;
-		this.startButton.y=GameConstants.stageHeight/2-this.startButton.height/2;
+		this.startButton.scale(0.5,0.5);
+		this.startButton.x=1024/2-this.startButton.width/4;
+		this.startButton.y=GameConstants.stageHeight/2-this.startButton.height/4;
 		this.startButton.on("click",this,this.onStartButtonClick);
 		this.addChild(this.startButton);
 		this.itemsToAnimate=[];
@@ -27192,6 +27202,7 @@ var InGame=(function(_super){
 	__proto.drawHUD=function(){
 		this.hud=new HUD();
 		this.addChild(this.hud);
+		this.pauseDialog=new PauseDialog();
 	}
 
 	/**
@@ -27199,10 +27210,15 @@ var InGame=(function(_super){
 	*
 	*/
 	__proto.drawGameOverScreen=function(){
-		this.gameOverContainer=new GameOverContainer();
-		this.gameOverContainer.on("changeScreen",this,this.playAgain);
-		this.addChild(this.gameOverContainer);
-		this.pauseDialog=new PauseDialog();
+		this.gameOverDialog=new GameOverDialog();
+		this.gameOverDialog.on("changeScreen",this,this.onMySettle);
+		this.settleDialog=new SettleDialog();
+		this.settleDialog.on("changeScreen",this,this.playAgain);
+	}
+
+	__proto.onMySettle=function(){
+		this.settleDialog.show();
+		this.settleDialog.setMyScore(this.scoreItems.toString());
 	}
 
 	/**
@@ -27211,7 +27227,6 @@ var InGame=(function(_super){
 	*/
 	__proto.playAgain=function(obj){
 		if (obj.id=="playAgain"){
-			this.gameOverContainer.alpha=0;
 			this.gameOverFadedOut();
 		}
 		this.event("changeScreen",obj);
@@ -27375,7 +27390,6 @@ var InGame=(function(_super){
 		this.touchX=this.hero.x;
 		this.touchY=this.hero.y;
 		this.hud.foodScore=0;
-		this.hud.distance=0;
 		this.hud.lives=this.lives;
 		this.bg.state=0;
 		this.gamePaused=false;
@@ -27392,7 +27406,6 @@ var InGame=(function(_super){
 	*/
 	__proto.disposeTemporarily=function(){
 		SoundManager.stopAll();
-		this.gameOverContainer.visible=false;
 		Laya.timer.clear(this,this.calculateElapsed);
 		Laya.timer.clear(this,this.onGameTick);
 	}
@@ -27921,12 +27934,10 @@ var InGame=(function(_super){
 	*
 	*/
 	__proto.gameOver=function(){
-		this.setChildIndex(this.gameOverContainer,this.numChildren-1);
-		this.gameOverContainer.initialize(this.scoreItems,Math.round(this.scoreDistance));
-		this.gameOverContainer.alpha=1;
+		this.gameOverDialog.show();
+		this.gameOverDialog.setMyScore(this.scoreItems.toString());
 	}
 
-	//Starling.juggler.add(tween_gameOverContainer);
 	__proto.shakeAnimation=function(event){
 		if (this.cameraShake > 0){
 			this.cameraShake-=0.1;
@@ -28009,7 +28020,6 @@ var InGame=(function(_super){
 	*
 	*/
 	__proto.gameOverFadedOut=function(){
-		this.gameOverContainer.visible=false;
 		this.initialize();
 	}
 
@@ -28054,19 +28064,23 @@ var Welcome=(function(_super){
 		/**Play button. */
 		this.playBtn=null;
 		/**About button. */
-		this.aboutBtn=null;
+		this.shareBtn=null;
 		/**Hero artwork. */
 		this.hero=null;
 		/**Back button. */
-		this.backBtn=null;
+		this.rankBtn=null;
 		/**Screen mode-"welcome" or "about". */
 		this.screenMode=null;
 		/**Current date. */
 		this._currentDate=null;
 		/**Hero art tween object. */
 		this.tween_hero=null;
+		this.rankSprite=null;
+		this.rankTexture=null;
+		this.rankCount=0;
 		Welcome.__super.call(this);
 		this.visible=false;
+		this.rankCount=1;
 		this.on("added",this,this.onAddedToStage);
 	}
 
@@ -28092,26 +28106,30 @@ var Welcome=(function(_super){
 		this.title=new Image(Assets.getTexture("welcome_title"))
 		this.title.x=600;
 		this.title.y=65;
+		this.title.scale(0.5,0.5);
 		this.addChild(this.title);
+		this.rankBtn=new Button("welcome_rankButton");
+		this.rankBtn.x=600;
+		this.rankBtn.y=355;
+		this.rankBtn.scale(0.5,0.5);
+		this.rankBtn.on("click",this,this.onRankClick);
+		this.addChild(this.rankBtn);
 		this.hero=new Image(Assets.getTexture("welcome_hero"));
 		this.hero.x=-this.hero.width;
 		this.hero.y=130;
 		this.addChild(this.hero);
 		this.playBtn=new Button("welcome_playButton");
-		this.playBtn.x=640;
-		this.playBtn.y=340;
+		this.playBtn.x=600;
+		this.playBtn.y=535;
+		this.playBtn.scale(0.5,0.5);
 		this.playBtn.on("click",this,this.onPlayClick);
 		this.addChild(this.playBtn);
-		this.aboutBtn=new Button("welcome_aboutButton");
-		this.aboutBtn.x=460;
-		this.aboutBtn.y=460;
-		this.aboutBtn.on("click",this,this.onAboutClick);
-		this.addChild(this.aboutBtn);
-		this.backBtn=new Button("about_backButton");
-		this.backBtn.x=660;
-		this.backBtn.y=350;
-		this.backBtn.on("click",this,this.onAboutBackClick);
-		this.addChild(this.backBtn);
+		this.shareBtn=new Button("welcome_inviteButton");
+		this.shareBtn.x=100;
+		this.shareBtn.y=535;
+		this.shareBtn.scale(0.5,0.5);
+		this.shareBtn.on("click",this,this.onShareClick);
+		this.addChild(this.shareBtn);
 	}
 
 	/**
@@ -28119,11 +28137,28 @@ var Welcome=(function(_super){
 	*@param event
 	*
 	*/
-	__proto.onAboutBackClick=function(event){
+	__proto.onRankClick=function(event){
 		if (!Sounds.muted){
 			Sounds.playSound(Sounds.sndCoffee)
 		}
-		this.initialize();
+		if(Browser.onMiniGame){
+			this.rankSprite=new Sprite();
+			var openDataContext=wx.getOpenDataContext();
+			var sharedCanvas=openDataContext.canvas;
+			this.rankTexture=new Texture(sharedCanvas);
+			this.addChild(this.rankSprite);
+			var rx=(Laya.stage.width-this.rankTexture.width)/2;
+			var ry=(Laya.stage.height-this.rankTexture.height)/2;
+			this.rankSprite.graphics.clear(true);
+			if((this.rankCount%2)==1){
+				this.rankSprite.visible=true;
+				this.rankSprite.graphics.drawTexture(this.rankTexture,rx,ry,this.rankTexture.width,this.rankTexture.height);
+				}else{
+				this.rankSprite.visible=false;
+				this.rankSprite.graphics.setAlpha(0);
+			}
+			this.rankCount+=1;
+		}
 	}
 
 	/**
@@ -28141,21 +28176,23 @@ var Welcome=(function(_super){
 	*@param event
 	*
 	*/
-	__proto.onAboutClick=function(event){
+	__proto.onShareClick=function(event){
 		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom)
-			this.showAbout();
+			this.showShare();
 	}
 
 	/**
 	*Show about screen.
 	*
 	*/
-	__proto.showAbout=function(){
-		wx.shareAppMessage({
-			title:"阿胜饥饿英雄测试",
-			imageUrl:"http://www.hungryherogame.com/images/promo.jpg",
-			query:""
-		});
+	__proto.showShare=function(){
+		if(Browser.onMiniGame){
+			wx.shareAppMessage({
+				title:"饿了么英雄",
+				imageUrl:"http://www.hungryherogame.com/images/promo.jpg",
+				query:""
+			});
+		}
 	}
 
 	/**
@@ -28171,8 +28208,8 @@ var Welcome=(function(_super){
 		this.screenMode="welcome";
 		this.hero.visible=true;
 		this.playBtn.visible=true;
-		this.aboutBtn.visible=true;
-		this.backBtn.visible=false;
+		this.shareBtn.visible=true;
+		this.rankBtn.visible=true;
 		this.hero.x=-this.hero.width;
 		this.hero.y=100;
 		this.hero.x=80;
@@ -28187,8 +28224,9 @@ var Welcome=(function(_super){
 	__proto.floatingAnimation=function(event){
 		this._currentDate=new Date();
 		this.hero.y=130+(Math.cos(this._currentDate.getTime()*0.002))*25;
-		this.playBtn.y=340+(Math.cos(this._currentDate.getTime()*0.002))*10;
-		this.aboutBtn.y=460+(Math.cos(this._currentDate.getTime()*0.002))*10;
+		this.rankBtn.y=355+(Math.cos(this._currentDate.getTime()*0.002))*10;
+		this.playBtn.y=535+(Math.cos(this._currentDate.getTime()*0.002))*10;
+		this.shareBtn.y=535+(Math.cos(this._currentDate.getTime()*0.002))*10;
 	}
 
 	/**
@@ -28326,19 +28364,6 @@ var GameOverContainer=(function(_super){
 		this.scoreText.text="SCORE: "+this._score.toString();
 		this.alpha=0;
 		this.visible=true;
-		wx.setUserCloudStorage({
-			KVDataList:[{key:"score",value:this._score.toString()}],
-			success:function (res){
-				console.log("setusercloud成功",res);
-				var openDataContext=wx.getOpenDataContext();
-				openDataContext.postMessage({
-					id:'getFriendCloudStorage'
-				});
-			},
-			fail:function (res){
-				console.log("setcloud失败",res);
-			}
-		});
 	}
 
 	/**
@@ -28373,17 +28398,17 @@ var HUD=(function(_super){
 		/**Food items score. */
 		this._foodScore=0;
 		/**Lives icon. */
-		this.livesLabel=null;
+		this.livesImg=null;
 		/**Lives TextField. */
 		this.livesText=null;
-		/**Distance icon. */
-		this.distanceLabel=null;
-		/**Distance TextField. */
-		this.distanceText=null;
 		/**Food Score icon. */
-		this.foodScoreLabel=null;
+		this.foodScoreImg=null;
 		/**Food Score TextField. */
 		this.foodScoreText=null;
+		//private var fontScoreValue:Font;
+		this.item1Img=null;
+		this.item2Img=null;
+		this.viewVideoImg=null;
 		HUD.__super.call(this);
 		this.on("added",this,this.onAddedToStage);
 	}
@@ -28397,33 +28422,53 @@ var HUD=(function(_super){
 	*/
 	__proto.onAddedToStage=function(event){
 		this.off("added",this,this.onAddedToStage);
-		this.livesLabel=new StarlingTextField(150,20,"L I V E S",null,20,"#ffffff");
-		this.livesLabel.x=150;
-		this.livesLabel.y=5;
-		this.addChild(this.livesLabel);
-		this.livesText=new StarlingTextField(150,75,"5",null,20,"#ffffff");
-		this.livesText.width=this.livesLabel.width;
-		this.livesText.x=Math.floor(this.livesLabel.x+this.livesLabel.width-this.livesText.width);
-		this.livesText.y=this.livesLabel.y+this.livesLabel.height;
+		this.livesImg=new Image(Assets.getTexture("img_life"));
+		this.livesImg.x=150;
+		this.livesImg.y=20;
+		this.livesImg.scale(0.5,0.5);
+		this.addChild(this.livesImg);
+		this.livesText=new StarlingTextField(150,20,"5","Microsoft YaHei",20,"#ffffff");
+		this.livesText.x=Math.floor(this.livesImg.x+(this.livesImg.width*this.livesImg.scaleX)/2-20);
+		this.livesText.y=this.livesImg.y+5;
 		this.addChild(this.livesText);
-		this.distanceLabel=new StarlingTextField(150,20,"D I S T A N C E",null,20,"#ffffff");
-		this.distanceLabel.x=Math.floor(1024-this.distanceLabel.width-10);
-		this.distanceLabel.y=5;
-		this.addChild(this.distanceLabel);
-		this.distanceText=new StarlingTextField(150,75,"0",null,20,"#ffffff");
-		this.distanceText.width=this.distanceLabel.width;
-		this.distanceText.x=Math.floor(this.distanceLabel.x+this.distanceLabel.width-this.distanceText.width);
-		this.distanceText.y=this.distanceLabel.y+this.distanceLabel.height;
-		this.addChild(this.distanceText);
-		this.foodScoreLabel=new StarlingTextField(150,20,"S C O R E",null,20,"#ffffff");
-		this.foodScoreLabel.x=Math.floor(this.distanceLabel.x-this.foodScoreLabel.width-50);
-		this.foodScoreLabel.y=5;
-		this.addChild(this.foodScoreLabel);
-		this.foodScoreText=new StarlingTextField(150,75,"0",null,20,"#ffffff");
-		this.foodScoreText.width=this.foodScoreLabel.width;
-		this.foodScoreText.x=Math.floor(this.foodScoreLabel.x+this.foodScoreLabel.width-this.foodScoreText.width);
-		this.foodScoreText.y=this.foodScoreLabel.y+this.foodScoreLabel.height;
+		this.foodScoreImg=new Image(Assets.getTexture("img_score"));
+		this.foodScoreImg.x=660;
+		this.foodScoreImg.y=20;
+		this.foodScoreImg.scale(0.5,0.5);
+		this.addChild(this.foodScoreImg);
+		this.foodScoreText=new StarlingTextField(150,20,"0","Microsoft YaHei",20,"#ffffff");
+		this.foodScoreText.x=Math.floor(this.foodScoreImg.x+(this.foodScoreImg.width*this.foodScoreImg.scaleX)/2-20);
+		this.foodScoreText.y=this.foodScoreImg.y+5;
 		this.addChild(this.foodScoreText);
+		this.item1Img=new Image(Assets.getTexture("item6"));
+		this.item2Img=new Image(Assets.getTexture("item7"));
+		this.viewVideoImg=new Image(Assets.getTexture("img_view_video"));
+		this.viewVideoImg.x=20;
+		this.viewVideoImg.scale(0.5,0.5);
+		this.viewVideoImg.y=Laya.stage.height-this.viewVideoImg.height*this.viewVideoImg.scaleY-20;
+		this.addChild(this.viewVideoImg);
+		this.item1Img.x=50;
+		this.item1Img.y=this.viewVideoImg.y-this.viewVideoImg.height*this.viewVideoImg.scaleY-5;
+		var circleImg1=new Image(Assets.getTexture("img_circle"));
+		circleImg1.scale(0.5,0.5);
+		circleImg1.x=40;
+		var circleLab1=new StarlingTextField(20,20,"3","Microsoft YaHei",20,"#ffffff");
+		circleLab1.x=circleImg1.width/4;
+		circleLab1.y=circleImg1.height/4;
+		circleImg1.addChild(circleLab1);
+		this.item1Img.addChild(circleImg1);
+		this.addChild(this.item1Img);
+		this.item2Img.x=this.item1Img.x+this.item1Img.width+20;
+		this.item2Img.y=this.item1Img.y;
+		var circleImg2=new Image(Assets.getTexture("img_circle"));
+		circleImg2.scale(0.5,0.5);
+		circleImg2.x=40;
+		var circleLab2=new StarlingTextField(20,20,"1","Microsoft YaHei",20,"#ffffff");
+		circleLab2.x=circleImg2.width/4;
+		circleLab2.y=circleImg2.height/4;
+		circleImg2.addChild(circleLab2);
+		this.item2Img.addChild(circleImg2);
+		this.addChild(this.item2Img);
 	}
 
 	/**
@@ -28448,16 +28493,6 @@ var HUD=(function(_super){
 	__getset(0,__proto,'lives',function(){return this._lives;},function(value){
 		this._lives=value;
 		this.livesText.text=this._lives.toString();
-	});
-
-	/**
-	*Distance travelled.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'distance',function(){return this._distance;},function(value){
-		this._distance=value;
-		this.distanceText.text=this._distance.toString();
 	});
 
 	/**
@@ -42998,6 +43033,25 @@ var Tab=(function(_super){
 })(UIGroup)
 
 
+//class ui.GameOverUI extends laya.ui.Dialog
+var GameOverUI=(function(_super){
+	function GameOverUI(){
+		this.myscore=null;
+		GameOverUI.__super.call(this);
+	}
+
+	__class(GameOverUI,'ui.GameOverUI',_super);
+	var __proto=GameOverUI.prototype;
+	__proto.createChildren=function(){
+		laya.ui.Component.prototype.createChildren.call(this);
+		this.createView(GameOverUI.uiView);
+	}
+
+	GameOverUI.uiView={"type":"Dialog","props":{"width":400,"height":400,"alpha":1},"child":[{"type":"Image","props":{"y":0,"x":0,"width":400,"skin":"gameOverDialog/img_bg.png","height":300},"child":[{"type":"Image","props":{"y":11,"x":54,"width":269,"skin":"gameOverDialog/img_score.png","height":55}},{"type":"Label","props":{"y":79,"x":50,"width":300,"var":"myscore","text":"0","name":"myscore","height":68,"fontSize":40,"font":"Microsoft YaHei","color":"#ffffff","bold":false,"align":"center"}},{"type":"Image","props":{"y":180,"x":31,"width":337,"skin":"gameOverDialog/img_invite.png","height":92},"child":[{"type":"Label","props":{"y":28,"x":269,"text":"20","fontSize":30,"font":"Microsoft YaHei","color":"#ffff00","bold":true,"align":"center"}}]}]},{"type":"Image","props":{"y":319,"x":40,"width":319,"skin":"gameOverDialog/img_pass.png","name":"close","mouseEnabled":true,"height":71}}]};
+	return GameOverUI;
+})(Dialog)
+
+
 //class ui.PauseDialogUI extends laya.ui.Dialog
 var PauseDialogUI=(function(_super){
 	function PauseDialogUI(){
@@ -43016,6 +43070,66 @@ var PauseDialogUI=(function(_super){
 })(Dialog)
 
 
+//class ui.SettleDialogUI extends laya.ui.Dialog
+var SettleDialogUI=(function(_super){
+	function SettleDialogUI(){
+		this.myscore=null;
+		this.showRank=null;
+		SettleDialogUI.__super.call(this);
+	}
+
+	__class(SettleDialogUI,'ui.SettleDialogUI',_super);
+	var __proto=SettleDialogUI.prototype;
+	__proto.createChildren=function(){
+		laya.ui.Component.prototype.createChildren.call(this);
+		this.createView(SettleDialogUI.uiView);
+	}
+
+	SettleDialogUI.uiView={"type":"Dialog","props":{"width":400,"height":400,"alpha":1},"child":[{"type":"Image","props":{"y":0,"x":0,"width":400,"skin":"gameOverDialog/img_bg.png","height":300,"alpha":1},"child":[{"type":"Image","props":{"y":12,"x":68,"width":264,"skin":"gameOverDialog/img_curscore.png","height":42}},{"type":"Label","props":{"y":70,"x":50,"width":300,"var":"myscore","text":"0","name":"myscore","height":60,"fontSize":40,"font":"Microsoft YaHei","color":"#ffffff","bold":false,"align":"center"}},{"type":"Label","props":{"y":270,"x":50,"width":300,"var":"showRank","underline":true,"text":"查看完整排行榜","name":"showRank","mouseEnabled":true,"italic":false,"hitTestPrior":false,"height":30,"fontSize":20,"font":"Microsoft YaHei","color":"#000000","bold":false,"align":"center"}}]},{"type":"Image","props":{"y":318,"x":64,"width":271,"skin":"gameOverDialog/img_again.png","name":"close","mouseEnabled":true,"height":60}}]};
+	return SettleDialogUI;
+})(Dialog)
+
+
+/**
+*...
+*@author
+*/
+//class view.GameOverDialog extends ui.GameOverUI
+var GameOverDialog=(function(_super){
+	function GameOverDialog(){
+		GameOverDialog.__super.call(this);
+		this.closeHandler=new Handler(this,this.onMyClosed);
+	}
+
+	__class(GameOverDialog,'view.GameOverDialog',_super);
+	var __proto=GameOverDialog.prototype;
+	__proto.setMyScore=function(myscore){
+		this.myscore.text=myscore;
+		if(Browser.onMiniGame){
+			wx.setUserCloudStorage({
+				KVDataList:[{key:"score",value:myscore.toString()}],
+				success:function (res){
+					console.log("setusercloud成功",res);
+					var openDataContext=wx.getOpenDataContext();
+					openDataContext.postMessage({
+						id:'getFriendCloudStorage'
+					});
+				},
+				fail:function (res){
+					console.log("setcloud失败",res);
+				}
+			});
+		}
+	}
+
+	__proto.onMyClosed=function(type){
+		this.event("changeScreen");
+	}
+
+	return GameOverDialog;
+})(GameOverUI)
+
+
 /**
 *...
 *@dengcs
@@ -43024,12 +43138,36 @@ var PauseDialogUI=(function(_super){
 var PauseDialog=(function(_super){
 	function PauseDialog(){
 		PauseDialog.__super.call(this);
-		this.dragArea="0,0,759,452";
 	}
 
 	__class(PauseDialog,'view.PauseDialog',_super);
 	return PauseDialog;
 })(PauseDialogUI)
+
+
+/**
+*...
+*@dengcs
+*/
+//class view.SettleDialog extends ui.SettleDialogUI
+var SettleDialog=(function(_super){
+	function SettleDialog(){
+		SettleDialog.__super.call(this);
+		this.closeHandler=new Handler(this,this.onMyClosed);
+	}
+
+	__class(SettleDialog,'view.SettleDialog',_super);
+	var __proto=SettleDialog.prototype;
+	__proto.setMyScore=function(myscore){
+		this.myscore.text=myscore;
+	}
+
+	__proto.onMyClosed=function(type){
+		this.event("changeScreen",{id:"playAgain"});
+	}
+
+	return SettleDialog;
+})(SettleDialogUI)
 
 
 	Laya.__init([EventDispatcher,LoaderManager,Browser,DrawText,GraphicAnimation,Render,View,WebGLContext2D,ShaderCompile,Timer,LocalStorage,AtlasGrid]);

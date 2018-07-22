@@ -1,8 +1,13 @@
 D .
+D gameOverDialog
+R D15B172B img_again.png
+R BD2B64C8 img_bg.png
+P 6AF07940 img_curscore.png
+R C3170369 img_invite.png
+P 2A6B54B0 img_pass.png
+P C83EA85F img_score.png
 D mySpritesheet
 P 72B539A4 about_backButton.png
-P 8332CBA6 about_hsharmaLogo.png
-P B1BA3CF7 about_starlingLogo.png
 R DDAF9644 bgLayer1.jpg
 R C77F270B bgLayer2.png
 R C7FB171F bgLayer3.png
@@ -31,6 +36,10 @@ P 0ED9F576 fly_0020.png
 P AE811DA0 gameOver_aboutButton.png
 P 799B4802 gameOver_mainButton.png
 P B777D05E gameOver_playAgainButton.png
+P 157AFD4A img_circle.png
+P 6395977F img_life.png
+P C2DA19D9 img_score.png
+P ED5C966A img_view_video.png
 P 37139383 item1.png
 P A8AFFFEB item2.png
 P F7D4E2B7 item3.png
@@ -54,7 +63,7 @@ P 3AAA5975 soundOff.png
 P 805927FE soundOn0000.png
 P 26F58985 soundOn0001.png
 P 06525742 soundOn0002.png
-P 41A11148 startButton.png
+P 86A8A592 startButton.png
 P 1BD1B508 watchOut_0001.png
 P 14CA6D14 watchOut_0002.png
 P 4CBDC110 watchOut_0003.png
@@ -62,8 +71,10 @@ P C2793F2F watchOut_0004.png
 P 1BD1B508 watchOut_0005.png
 P A557168F welcome_aboutButton.png
 P 8FBDD71F welcome_hero.png
-P F6EFDF31 welcome_playButton.png
-P AF7E6CBE welcome_title.png
+R 14F7E647 welcome_inviteButton.png
+R 698933D2 welcome_playButton.png
+P 5D74F36A welcome_rankButton.png
+R 40FE514A welcome_title.png
 D pauseDialog
 P E93034AA btn_close.png
 R F4D29C0B img_bj.png

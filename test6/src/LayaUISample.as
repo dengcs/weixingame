@@ -19,9 +19,7 @@
 	import laya.wx.mini.MiniAdpter;
 	import wx;
 	
-	public class LayaUISample {
-		private var rankSprite2:Sprite;
-		private var rankTexture:Texture;
+	public class LayaUISample {		
 		public function LayaUISample() {
 			//初始化微信小游戏
 			MiniAdpter.init(false);
@@ -30,8 +28,8 @@
 			Laya.init(GameConstants.stageWidth, GameConstants.stageHeight,WebGL);
 			//Laya.stage.scaleMode = Stage.SCALE_FULL;
 			Laya.stage.alignH = Stage.ALIGN_CENTER;
-			Laya.stage.alignV = Stage.ALIGN_TOP;
-			Laya.stage.scaleMode = Stage.SCALE_FIXED_WIDTH
+			Laya.stage.alignV = Stage.ALIGN_MIDDLE;
+			Laya.stage.scaleMode = Stage.SCALE_EXACTFIT;
 			Laya.stage.screenMode = Stage.SCREEN_HORIZONTAL;
 			//Stat.show();
 			
@@ -42,7 +40,7 @@
 		
 		private function beginLoad():void {
 			//加载引擎需要的资源
-			Laya.loader.load(["res/atlas/mySpritesheet.atlas","res/atlas/pauseDialog.atlas"], Handler.create(this, onLoaded));
+			Laya.loader.load(atlasUrls(), Handler.create(this, onLoaded));
 		}
 		
 		private function onLoaded():void {
@@ -74,29 +72,7 @@
 			var lb:Label = new Label;
 			lb.text = "fdsaf";
 			lb.color="#ffffff"
-			Laya.stage.addChild(lb);*/
-			if(Browser.onMiniGame){
-			rankSprite2 = new Sprite();
-			var openDataContext = wx.getOpenDataContext();
-			var sharedCanvas = openDataContext.canvas;
-
-			trace("dcs1", sharedCanvas.width, sharedCanvas.height);
-
-			rankTexture=new Texture(sharedCanvas);
-			rankTexture.bitmap.alwaysChange=true;
-			Laya.stage.addChild(rankSprite2);
-
-			trace("dcs2", rankTexture.width, rankTexture.height);			
-
-			var rx = (Laya.stage.width - rankTexture.width)/2;
-			var ry = (Laya.stage.height - rankTexture.height)/2;
-
-			Laya.timer.frameLoop(1, this, function (){
-				// rankTexture.bitmap.alwaysChange = true;//小游戏使用，非常费，每帧刷新
-				rankSprite2.graphics.clear();
-				rankSprite2.graphics.drawTexture(rankTexture, rx, ry, rankTexture.width, rankTexture.height);
-			});
-			}
+			Laya.stage.addChild(lb);*/			
 		}
 		
 		private function aniUrls(aniName:String,start:int,end:int):Array
@@ -109,5 +85,16 @@
             }
             return urls;
         }
+
+		private function atlasUrls():Array
+		{
+			var urls:Array=[];
+
+			urls.push("res/atlas/mySpritesheet.atlas");
+			urls.push("res/atlas/pauseDialog.atlas");
+			urls.push("res/atlas/gameOverDialog.atlas");
+
+			return urls;
+		}
 	}
 }

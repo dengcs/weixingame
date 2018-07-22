@@ -20,12 +20,25 @@ package sdk
 						var id:int = data.id;
 						switch(id){
 							case "getFriendCloudStorage":
+							{
 								wx.getFriendCloudStorage({
 									keyList:["score"],
 								  success: function(res):void {
 									drawRankList(res);
 								  }
 								})
+								break;
+							}
+							case "showRankView":
+							{
+								showRankView();
+								break;
+							}
+							case "hideRankView":
+							{
+								hideRankView();
+								break;
+							}
 						}
 					}
 				);
@@ -88,7 +101,7 @@ package sdk
 			
 			// 设置数据项为对应图片的路径
 			var dataArray:Array = [];
-			for(var i:Number=0;i<res.data.length;i++){
+			for(var i:Number=0;i<res.data.length;i++)
 			{
 				var data:Object = res.data[i];
 				
@@ -100,7 +113,7 @@ package sdk
 			list.array = dataArray;
 
 			list.x = (Laya.stage.width - list.width)/2;
-			list.y = 0;			
+			list.y = 0;
 		}
 		
 		private function updateItem(cell:RBaseUI, index:int):void 
@@ -108,7 +121,17 @@ package sdk
 			cell.name_txt.text = cell.dataSource.nickname;
 			cell.v_txt.text = cell.dataSource.score;
 			cell.h_img.skin = cell.dataSource.img;
-		}		
+		}
+
+		private function showRankView():void
+		{
+			list.visible = true;
+		}
+
+		private function hideRankView():void
+		{
+			list.visible = false;
+		}
 	}
 
 }

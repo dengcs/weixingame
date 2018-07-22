@@ -36,6 +36,8 @@ package com.hsharma.hungryHero.screens
 	import laya.maths.Rectangle;
 	import laya.media.SoundManager;
 	import view.PauseDialog;
+	import view.GameOverDialog;
+	import view.SettleDialog;
 	
 	
 	/**
@@ -225,7 +227,7 @@ package com.hsharma.hungryHero.screens
 		// ------------------------------------------------------------------------------------------------------------
 		
 		/** GameOver Container. */
-		private var gameOverContainer:GameOverContainer;
+		//private var gameOverContainer:GameOverContainer;
 		
 		/** Pause button. */
 		private var pauseButton:PauseButton;
@@ -234,9 +236,13 @@ package com.hsharma.hungryHero.screens
 		private var startButton:Button;
 		
 		/** Tween object for game over container. */
-		private var tween_gameOverContainer:Object;
+		//private var tween_gameOverContainer:Object;
 
 		private var pauseDialog:PauseDialog;
+
+		private var gameOverDialog:GameOverDialog;
+
+		private var settleDialog:SettleDialog;
 		
 		// ------------------------------------------------------------------------------------------------------------
 		// METHODS
@@ -307,8 +313,10 @@ package com.hsharma.hungryHero.screens
 			// Start button.
 			startButton = new Button("startButton");
 			startButton.fontColor = 0xffffff;
-			startButton.x = GameConstants.stageWidth/2 - startButton.width/2;
-			startButton.y = GameConstants.stageHeight/2 - startButton.height/2;
+			startButton.scale(0.5, 0.5);
+			startButton.x = GameConstants.stageWidth/2 - startButton.width/4;
+			startButton.y = GameConstants.stageHeight/2 - startButton.height/4;
+
 			startButton.on(Event.CLICK,this, onStartButtonClick);
 			this.addChild(startButton);
 			
@@ -373,6 +381,8 @@ package com.hsharma.hungryHero.screens
 		{
 			hud = new HUD();
 			this.addChild(hud);
+
+			pauseDialog = new PauseDialog();
 		}
 		
 		/**
@@ -381,11 +391,22 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function drawGameOverScreen():void
 		{
-			gameOverContainer = new GameOverContainer();
-			gameOverContainer.on(NavigationEvent.CHANGE_SCREEN,this, playAgain);
-			this.addChild(gameOverContainer);
+			// gameOverContainer = new GameOverContainer();
+			// gameOverContainer.on(NavigationEvent.CHANGE_SCREEN,this, playAgain);
+			// this.addChild(gameOverContainer);
 
-			pauseDialog = new PauseDialog();
+			gameOverDialog = new GameOverDialog();
+			gameOverDialog.on(NavigationEvent.CHANGE_SCREEN, this, onMySettle);
+
+
+			settleDialog = new SettleDialog();
+			settleDialog.on(NavigationEvent.CHANGE_SCREEN, this, playAgain);
+		}
+
+		private function onMySettle():void
+		{
+			settleDialog.show();
+			settleDialog.setMyScore(scoreItems.toString());
 		}
 		
 		/**
@@ -396,7 +417,7 @@ package com.hsharma.hungryHero.screens
 		{
 			if (obj.id == "playAgain") 
 			{
-				gameOverContainer.alpha = 0;
+				//gameOverContainer.alpha = 0;
 				//tween_gameOverContainer = new Tween(gameOverContainer, 1);
 				//tween_gameOverContainer.fadeTo(0);
 				//tween_gameOverContainer.onComplete = gameOverFadedOut;
@@ -606,7 +627,7 @@ package com.hsharma.hungryHero.screens
 			
 			// Reset hud values and text fields.
 			hud.foodScore = 0;
-			hud.distance = 0;
+			//hud.distance = 0;
 			hud.lives = lives;
 			
 			// Reset background's state to idle.
@@ -637,7 +658,7 @@ package com.hsharma.hungryHero.screens
 		{
 			SoundManager.stopAll();
 			
-			gameOverContainer.visible = false;
+			//gameOverContainer.visible = false;
 			
 			Laya.timer.clear(this, calculateElapsed);
 			
@@ -1534,12 +1555,14 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function gameOver():void
 		{
-			this.setChildIndex(gameOverContainer, this.numChildren-1);
-			gameOverContainer.initialize(scoreItems, Math.round(scoreDistance));
+			// this.setChildIndex(gameOverContainer, this.numChildren-1);
+			// gameOverContainer.initialize(scoreItems, Math.round(scoreDistance));
 			//tween_gameOverContainer = new Tween(gameOverContainer, 1);
 			//tween_gameOverContainer.fadeTo(1);
-			gameOverContainer.alpha = 1;
+			//gameOverContainer.alpha = 1;
 			//Starling.juggler.add(tween_gameOverContainer);
+			gameOverDialog.show();
+			gameOverDialog.setMyScore(scoreItems.toString());
 		}
 		
 		private function shakeAnimation(event:Event):void
@@ -1675,7 +1698,7 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function gameOverFadedOut():void
 		{
-			gameOverContainer.visible = false;
+			//gameOverContainer.visible = false;
 			initialize();
 		}
 		
