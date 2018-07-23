@@ -29,14 +29,14 @@ package sdk
 								})
 								break;
 							}
-							case "showRankView":
+							case "showRank":
 							{
-								showRankView();
+								showRank();
 								break;
 							}
-							case "hideRankView":
+							case "hideRank":
 							{
-								hideRankView();
+								hideRank();
 								break;
 							}
 						}
@@ -74,18 +74,20 @@ package sdk
 
 		private function sortScore(a:Object, b:Object):Boolean
 		{
-			return a.score < b.score;
+			return parseInt(a.score) < parseInt(b.score);
 		}
 		
 		private function drawRankList(res:Object):void
 		{
 			trace("drawRankList", res);
-			
+			if(list == null)
+			{
+				list = new List();
+			}
+
 			if(list && list.parent){
 				list.removeSelf();
-			}
-			
-			list = new List();
+			}			
 			
 			list.itemRender = RBaseUI;
 			
@@ -113,7 +115,7 @@ package sdk
 			list.array = dataArray;
 
 			list.x = (Laya.stage.width - list.width)/2;
-			list.y = 0;
+			list.y = 0;			
 		}
 		
 		private function updateItem(cell:RBaseUI, index:int):void 
@@ -123,14 +125,14 @@ package sdk
 			cell.h_img.skin = cell.dataSource.img;
 		}
 
-		private function showRankView():void
-		{
-			list.visible = true;
+		private function hideRank():void
+		{	
+			list.visible = false;
 		}
 
-		private function hideRankView():void
+		private function showRank():void
 		{
-			list.visible = false;
+			list.visible = true;
 		}
 	}
 

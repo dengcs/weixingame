@@ -28146,16 +28146,20 @@ var Welcome=(function(_super){
 			var openDataContext=wx.getOpenDataContext();
 			var sharedCanvas=openDataContext.canvas;
 			this.rankTexture=new Texture(sharedCanvas);
+			this.rankTexture.bitmap.alwaysChange=true;
 			this.addChild(this.rankSprite);
 			var rx=(Laya.stage.width-this.rankTexture.width)/2;
 			var ry=(Laya.stage.height-this.rankTexture.height)/2;
-			this.rankSprite.graphics.clear(true);
+			this.rankSprite.graphics.clear();
 			if((this.rankCount%2)==1){
-				this.rankSprite.visible=true;
+				openDataContext.postMessage({
+					id:'showRank'
+				});
 				this.rankSprite.graphics.drawTexture(this.rankTexture,rx,ry,this.rankTexture.width,this.rankTexture.height);
 				}else{
-				this.rankSprite.visible=false;
-				this.rankSprite.graphics.setAlpha(0);
+				openDataContext.postMessage({
+					id:'hideRank'
+				});
 			}
 			this.rankCount+=1;
 		}

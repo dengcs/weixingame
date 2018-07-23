@@ -168,22 +168,25 @@ package com.hsharma.hungryHero.screens
 				var sharedCanvas = openDataContext.canvas;
 				
 				rankTexture=new Texture(sharedCanvas);
-				//rankTexture.bitmap.alwaysChange=true;
+				rankTexture.bitmap.alwaysChange=true;
 				this.addChild(rankSprite);		
 
 				var rx = (Laya.stage.width - rankTexture.width)/2;
 				var ry = (Laya.stage.height - rankTexture.height)/2;
 
-				rankSprite.graphics.clear(true);				
+				rankSprite.graphics.clear();				
 
 				if((this.rankCount%2) == 1)
 				{
-					rankSprite.visible = true;
 					rankSprite.graphics.drawTexture(rankTexture, rx, ry, rankTexture.width, rankTexture.height);
+					openDataContext.postMessage({
+							id: 'showRank'
+					});
 				}else
 				{
-					rankSprite.visible = false;
-					rankSprite.graphics.setAlpha(0);
+					openDataContext.postMessage({
+							id: 'hideRank'
+					});
 				}
 				this.rankCount += 1;
 			}
