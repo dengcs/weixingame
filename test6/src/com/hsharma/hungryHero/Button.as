@@ -11,8 +11,7 @@ package com.hsharma.hungryHero
 		public function Button(name:String/*bmd:BitmapData,rect:Rectangle*/) 
 		{
 			skin = Assets.getTexture(name);
-			//addChild(new Bitmap(bmd));
-			
+			//addChild(new Bitmap(bmd));			
 		}
 		
 	}

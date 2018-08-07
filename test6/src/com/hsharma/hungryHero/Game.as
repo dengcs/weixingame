@@ -72,48 +72,28 @@ package com.hsharma.hungryHero
 		 */
 		private function initScreens():void
 		{
-			trace("inits");
-			this.on(NavigationEvent.CHANGE_SCREEN, this,onChangeScreen);
-			
+			trace("inits");			
 			// InGame screen.
 			screenInGame = new InGame();
-			screenInGame.on(NavigationEvent.CHANGE_SCREEN, this,onInGameNavigation);
+			screenInGame.on(NavigationEvent.CHANGE_SCREEN, this, onGameChangeScreen);
 			this.addChild(screenInGame);
 			
 			// Welcome screen.
 			screenWelcome = new Welcome();
-			screenWelcome.on(NavigationEvent.CHANGE_SCREEN, this, onChangeScreen);
+			screenWelcome.on(NavigationEvent.CHANGE_SCREEN, this, onWelcomeChangeScreen);
 			this.addChild(screenWelcome);
 
 			// Create and add Sound/Mute button.
 			soundButton = new SoundButton();
 			soundButton.x = Math.floor(soundButton.width * 0.5);
 			soundButton.y = Math.floor(soundButton.height * 0.5);
-			soundButton.on(Event.CLICK, this,onSoundButtonClick);
+			soundButton.on(Event.CLICK, this, onSoundButtonClick);
 			this.addChild(soundButton)
 			
 			// Initialize the Welcome screen by default. 
 			screenWelcome.initialize();
-		}
+		}		
 		
-		/**
-		 * On navigation from different screens. 
-		 * @param event
-		 * 
-		 */
-		private function onInGameNavigation(event:Object):void
-		{
-			switch (event.id)
-			{
-				case "mainMenu":
-					screenWelcome.initialize();
-					break;
-				case "about":
-					//screenWelcome.initialize();
-					screenWelcome.showAbout();
-					break;
-			}
-		}
 		
 		/**
 		 * On click of the sound/mute button. 
@@ -126,8 +106,8 @@ package com.hsharma.hungryHero
 			{
 				Sounds.muted = false;
 				
-				if (screenWelcome.visible) Sounds.playMusic(Sounds.sndBgMain)//.play(0, 999);
-				else if (screenInGame.visible) Sounds.playMusic(Sounds.sndBgGame)//.play(0, 999);
+				if (screenWelcome.visible) Sounds.playMusic(Sounds.sndBgMain);
+				else if (screenInGame.visible) Sounds.playMusic(Sounds.sndBgGame);
 				
 				soundButton.showUnmuteState();
 			}
@@ -139,22 +119,18 @@ package com.hsharma.hungryHero
 				soundButton.showMuteState();
 			}
 		}
-		
-		/**
-		 * On change of screen. 
-		 * @param event
-		 * 
-		 */
-		private function onChangeScreen(event:Object):void
+
+		private function onGameChangeScreen():void
 		{
-			trace(event);
-			switch (event.id)
-			{
-				case "play":
-					screenWelcome.disposeTemporarily();
-					screenInGame.initialize();
-					break;
-			}
+			screenInGame.disposeTemporarily();
+			screenWelcome.initialize();
+		}
+		
+		
+		private function onWelcomeChangeScreen():void
+		{
+			screenWelcome.disposeTemporarily();
+			screenInGame.initialize();
 		}
 	}
 }

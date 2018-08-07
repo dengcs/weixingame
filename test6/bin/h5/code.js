@@ -757,66 +757,6 @@ var Handler=(function(){
 
 
 /**
-*This class stores the properties of a font-
-*Font Name
-*Font Size
-*Font Color
-*
-*@author hsharma
-*
-*/
-//class com.hsharma.hungryHero.customObjects.Font
-var Font=(function(){
-	function Font(fontName,fontSize,fontColor){
-		this._fontName=null;
-		this._fontSize=0;
-		this._fontColor=0;
-		(fontColor===void 0)&& (fontColor=0xffffff);
-		this.fontName=fontName;
-		this.fontSize=fontSize;
-		this.fontColor=fontColor;
-	}
-
-	__class(Font,'com.hsharma.hungryHero.customObjects.Font');
-	var __proto=Font.prototype;
-	/**
-	*Font Color.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'fontColor',function(){
-		return this._fontColor;
-		},function(value){
-		this._fontColor=value;
-	});
-
-	/**
-	*Font Size.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'fontSize',function(){
-		return this._fontSize;
-		},function(value){
-		this._fontSize=value;
-	});
-
-	/**
-	*Font Name.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'fontName',function(){
-		return this._fontName;
-		},function(value){
-		this._fontName=value;
-	});
-
-	return Font;
-})()
-
-
-/**
 *This class defines custom events for navigation in the game.
 *@author hsharma
 *
@@ -831,6 +771,7 @@ var NavigationEvent=(function(){
 
 	__class(NavigationEvent,'com.hsharma.hungryHero.events.NavigationEvent');
 	NavigationEvent.CHANGE_SCREEN="changeScreen";
+	NavigationEvent.DIALOG_TO_GAME="dialogToGame";
 	return NavigationEvent;
 })()
 
@@ -1282,35 +1223,7 @@ var Sounds=(function(){
 	}
 
 	Sounds.playSound=function(path){
-		if(Browser.onMiniGame){
-			var sa=Sounds.sounds[path];
-			if(sa==null){
-				sa=Sounds.sounds[path]={};
-				sa.arr=[];
-			}
-			if(sa.arr.length<5){
-				var a=new Audio();
-				a.src="res/sounds/"+path+".mp3";
-				sa.arr.push(a);
-				sa.i=sa.arr.length-1;
-				}else{
-				sa.i++;
-				if(sa.i>=sa.arr.length){
-					sa.i=0;
-				}
-				a=sa.arr[sa.i];
-			}
-			a.currentTime=0
-			a.play()
-			}else{
-			var sc=Sounds.sounds[path];
-			if (sc==null){
-				sc=SoundManager.playSound("res/sounds/"+path+".mp3",1);
-				Sounds.sounds[path]=sc;
-				}else{
-				sc.play();
-			}
-		}
+		SoundManager.playSound("res/sounds/"+path+".mp3",1);
 	}
 
 	Sounds.sndBgMain="bgGame";
@@ -1327,21 +1240,21 @@ var Sounds=(function(){
 })()
 
 
-//class LayaUISample
-var LayaUISample=(function(){
-	function LayaUISample(){
+//class MiniGame
+var MiniGame=(function(){
+	function MiniGame(){
 		MiniAdpter.init(false);
 		Laya.init(1024,GameConstants.stageHeight,WebGL);
 		Laya.stage.alignH="center";
-		Laya.stage.alignV="middle";
-		Laya.stage.scaleMode="exactfit";
+		Laya.stage.alignV="top";
+		Laya.stage.scaleMode="fixedwidth";
 		Laya.stage.screenMode="horizontal";
 		new WXUtils();
 		ResourceVersion.enable("version.json",Handler.create(this,this.beginLoad),2);
 	}
 
-	__class(LayaUISample,'LayaUISample');
-	var __proto=LayaUISample.prototype;
+	__class(MiniGame,'MiniGame');
+	var __proto=MiniGame.prototype;
 	__proto.beginLoad=function(){
 		Laya.loader.load(this.atlasUrls(),Handler.create(this,this.onLoaded));
 	}
@@ -1354,16 +1267,7 @@ var LayaUISample=(function(){
 		ani.play(0,true,"fly");
 	}
 
-	/*var hud:HUD=new HUD;
-	Laya.stage.addChild(hud);
-	var ll:StarlingTextField=new StarlingTextField(150,20,"L I V E S",null,20,"#ffffff");
-	ll.x=150;
-	ll.y=5;
-	Laya.stage.addChild(ll);
-	var lb:Label=new Label;
-	lb.text="fdsaf";
-	lb.color="#ffffff"
-	Laya.stage.addChild(lb);*/
+	//Laya.stage.addChild(ly);
 	__proto.aniUrls=function(aniName,start,end){
 		var urls=[];
 		for(var i=start;i<=end;i++){
@@ -1380,37 +1284,155 @@ var LayaUISample=(function(){
 		return urls;
 	}
 
-	return LayaUISample;
+	return MiniGame;
 })()
 
 
 //class sdk.WXUtils
 var WXUtils=(function(){
 	function WXUtils(){
-		if(Browser.onMiniGame){
+		this.loginObj=null;
+		this.openid=null;
+		this.nickName=null;
+		this.avatarUrl=null;
+		var _$this=this;
+		WXUtils.instance=this;
+		if (Browser.onMiniGame){
 			wx.login({
-				success:function (){
-					wx.getUserInfo({
-						openIdList:["selfOpenId","selfOpenId"],
-						success:function (res){
-							console.log("success",res.userInfo);
-						},
-						fail:function (){
-							console.log("fail");
+				success:function (obj){
+					_$this.loginObj=obj;
+					console.log(obj);
+					wx.showShareMenu({withShareTicket:true});
+					wx.onShareAppMessage(function(){
+						return {
+							title:"饿了么英雄",
+							imageUrl:"https://dengcs.oss-cn-shenzhen.aliyuncs.com/promo.jpg",
+							query:"",
+							success:function (res){
+								console.log("share2--success");
+							},
+							fail:function (){
+								console.log("share2--fail");
+							}
 						}
 					});
-					wx.showShareMenu();
-					var openDataContext=wx.getOpenDataContext();
-					openDataContext.postMessage({
-						id:"getFriendCloudStorage"
-					})
 				}
 			});
 		}
 	}
 
 	__class(WXUtils,'sdk.WXUtils');
+	var __proto=WXUtils.prototype;
+	/**
+	*打开视频广告
+	*/
+	__proto.showRewardedVideoAd=function(){
+		if (Browser.onMiniGame){
+			wx.showToast({
+				title:'提示',
+				content:'这是一个模态弹窗'
+			})
+			return;
+			var rewardedVideoAd=wx.createRewardedVideoAd({adUnitId:'xxxx' });
+			rewardedVideoAd.show();
+			rewardedVideoAd.onLoad(function(){
+				console.log("视频广告加载成功");
+			});
+			rewardedVideoAd.onError(function(err){
+				console.log(err);
+				wx.showToast({
+					title:'提示',
+					content:'这是一个模态弹窗'
+				})
+			});
+			rewardedVideoAd.onClose(function(){
+				console.log("视频广告关闭");
+			});
+			}else{
+			alert("此平台不支持视频广告");
+		}
+	}
+
+	__proto.getFriendCloudStorage=function(){
+		if (Browser.onMiniGame){
+			if (this.nickName==null){
+				}else{
+				var openDataContext=wx.getOpenDataContext();
+				openDataContext.postMessage({
+					id:"getFriendCloudStorage",nickName:this.nickName,avatarUrl:this.avatarUrl
+				})
+			}
+		}
+	}
+
+	__proto.getSharedCanvas=function(){
+		if (Browser.onMiniGame){
+			var openDataContext=wx.getOpenDataContext();
+			var sharedCanvas=openDataContext.canvas;
+			return sharedCanvas;
+		}
+		return null;
+	}
+
+	__proto.setChaoyue=function(v){
+		if(Browser.onMiniGame){
+			var openDataContext=wx.getOpenDataContext();
+			openDataContext.postMessage({
+				id:"chaoyue",value:v
+			})
+		}
+	}
+
+	__proto.setMyScore=function(myscore){
+		if(Browser.onMiniGame){
+			var openDataContext=wx.getOpenDataContext();
+			openDataContext.postMessage({
+				id:"setMyScore",value:myscore
+			})
+		}
+	}
+
+	__proto.showShare=function(callBack){
+		if(Browser.onMiniGame){
+			wx.shareAppMessage({
+				title:"饿了么英雄",
+				imageUrl:"https://dengcs.oss-cn-shenzhen.aliyuncs.com/promo.jpg",
+				query:"",
+				success:function (res){
+					if(callBack !=null){
+						callBack.run();
+					}
+				},
+				fail:function (){
+					console.log("share1-fail")
+				}
+			});
+		}
+	}
+
+	WXUtils.instance=null;
 	return WXUtils;
+})()
+
+
+/**
+*...
+*@author
+*/
+//class utils.PositionHelper
+var PositionHelper=(function(){
+	function PositionHelper(){}
+	__class(PositionHelper,'utils.PositionHelper');
+	PositionHelper.relocateY=function(me){
+		var mvY=GameConstants.stageHeight-Laya.stage.height;
+		me.y=me.y-mvY;
+	}
+
+	PositionHelper.relocateCenter=function(me){
+		me.y=Laya.stage.height/2-me.height/2;
+	}
+
+	return PositionHelper;
 })()
 
 
@@ -26328,12 +26350,11 @@ var Game=(function(_super){
 	*/
 	__proto.initScreens=function(){
 		console.log("inits");
-		this.on("changeScreen",this,this.onChangeScreen);
 		this.screenInGame=new InGame();
-		this.screenInGame.on("changeScreen",this,this.onInGameNavigation);
+		this.screenInGame.on("changeScreen",this,this.onGameChangeScreen);
 		this.addChild(this.screenInGame);
 		this.screenWelcome=new Welcome();
-		this.screenWelcome.on("changeScreen",this,this.onChangeScreen);
+		this.screenWelcome.on("changeScreen",this,this.onWelcomeChangeScreen);
 		this.addChild(this.screenWelcome);
 		this.soundButton=new SoundButton();
 		this.soundButton.x=Math.floor(this.soundButton.width *0.5);
@@ -26344,22 +26365,6 @@ var Game=(function(_super){
 	}
 
 	/**
-	*On navigation from different screens.
-	*@param event
-	*
-	*/
-	__proto.onInGameNavigation=function(event){
-		switch (event.id){
-			case "mainMenu":
-				this.screenWelcome.initialize();
-				break ;
-			case "about":
-				this.screenWelcome.showAbout();
-				break ;
-			}
-	}
-
-	/**
 	*On click of the sound/mute button.
 	*@param event
 	*
@@ -26367,8 +26372,8 @@ var Game=(function(_super){
 	__proto.onSoundButtonClick=function(event){
 		if (Sounds.muted){
 			Sounds.muted=false;
-			if (this.screenWelcome.visible)Sounds.playMusic(Sounds.sndBgMain)
-				else if (this.screenInGame.visible)Sounds.playMusic(Sounds.sndBgGame)
+			if (this.screenWelcome.visible)Sounds.playMusic(Sounds.sndBgMain);
+			else if (this.screenInGame.visible)Sounds.playMusic(Sounds.sndBgGame);
 			this.soundButton.showUnmuteState();
 		}
 		else{
@@ -26378,19 +26383,14 @@ var Game=(function(_super){
 		}
 	}
 
-	/**
-	*On change of screen.
-	*@param event
-	*
-	*/
-	__proto.onChangeScreen=function(event){
-		console.log(event);
-		switch (event.id){
-			case "play":
-				this.screenWelcome.disposeTemporarily();
-				this.screenInGame.initialize();
-				break ;
-			}
+	__proto.onGameChangeScreen=function(){
+		this.screenInGame.disposeTemporarily();
+		this.screenWelcome.initialize();
+	}
+
+	__proto.onWelcomeChangeScreen=function(){
+		this.screenWelcome.disposeTemporarily();
+		this.screenInGame.initialize();
 	}
 
 	return Game;
@@ -26414,7 +26414,7 @@ var BgLayer=(function(_super){
 		this.image2=null;
 		/**Parallax depth-used to decide speed of the animation. */
 		this._parallaxDepth=NaN;
-		this.heights=[null,768,318,229,124];
+		this.heights=[0,768,318,229,124];
 		BgLayer.__super.call(this);
 		this._layer=_layer;
 		this.on("added",this,this.onAddedToStage);
@@ -26429,6 +26429,7 @@ var BgLayer=(function(_super){
 	*/
 	__proto.onAddedToStage=function(event){
 		this.off("added",this,this.onAddedToStage);
+		Laya.stage.on("resize",this,this.onResize);
 		if (this._layer==1){
 			this.image1=new Image(Assets.getTexture("bgLayer"+this._layer));
 			this.image2=new Image(Assets.getTexture("bgLayer"+this._layer));
@@ -26438,11 +26439,15 @@ var BgLayer=(function(_super){
 			this.image2=new Image(Assets.getTexture("bgLayer"+this._layer));
 		}
 		this.image1.x=0;
-		this.image1.y=GameConstants.stageHeight-this.heights[this._layer];
 		this.image2.x=1024
-		this.image2.y=this.image1.y;
 		this.addChild(this.image1);
 		this.addChild(this.image2);
+		this.onResize();
+	}
+
+	__proto.onResize=function(){
+		this.image1.y=Laya.stage.height-this.heights[this._layer];
+		this.image2.y=this.image1.y;
 	}
 
 	/**
@@ -26475,7 +26480,7 @@ var GameBackground=(function(_super){
 		/**State of the game. */
 		this._state=0;
 		/**Game paused? */
-		this._gamePaused=false;
+		this._gamePaused=true;
 		GameBackground.__super.call(this);
 		this.on("added",this,this.onAddedToStage);
 	}
@@ -26988,21 +26993,6 @@ var PDParticleSystem=(function(_super){
 
 
 /**
-*...
-*@author lizhi
-*/
-//class com.hsharma.hungryHero.Quad extends laya.display.Sprite
-var Quad=(function(_super){
-	function Quad(width,height,color){
-		Quad.__super.call(this);
-	}
-
-	__class(Quad,'com.hsharma.hungryHero.Quad',_super);
-	return Quad;
-})(Sprite)
-
-
-/**
 *This class contains the complete code of the game mechanics.
 *
 *@author hsharma
@@ -27028,7 +27018,7 @@ var InGame=(function(_super){
 		/**Is game rendering through hardware or software? */
 		this.isHardwareRendering=false;
 		/**Is game currently in paused state? */
-		this.gamePaused=false;
+		this.gamePaused=true;
 		/**Items pool with a maximum cap for reuse of items. */
 		this.itemsPool=null;
 		/**Obstacles pool with a maximum cap for reuse of items. */
@@ -27109,11 +27099,6 @@ var InGame=(function(_super){
 		this.touch=null;
 		/**HUD Container. */
 		this.hud=null;
-		/**Pause button. */
-		this.pauseButton=null;
-		/**Kick Off button in the beginning of the game .*/
-		this.startButton=null;
-		//private var tween_gameOverContainer:Object;
 		this.pauseDialog=null;
 		this.gameOverDialog=null;
 		this.settleDialog=null;
@@ -27143,26 +27128,8 @@ var InGame=(function(_super){
 	__proto.drawGame=function(){
 		this.bg=new GameBackground();
 		this.addChild(this.bg);
-		if (this.isHardwareRendering){
-			InGame.particleCoffee=new PDParticleSystem(null,null)
-			InGame.particleMushroom=new PDParticleSystem(null,null)
-			this.addChild(InGame.particleCoffee);
-			this.addChild(InGame.particleMushroom);
-		}
 		this.hero=new Hero();
 		this.addChild(this.hero);
-		this.pauseButton=new PauseButton();
-		this.pauseButton.x=this.pauseButton.width *2;
-		this.pauseButton.y=this.pauseButton.height *0.5;
-		this.pauseButton.on("click",this,this.onPauseButtonClick);
-		this.addChild(this.pauseButton);
-		this.startButton=new Button("startButton");
-		this.startButton.fontColor=0xffffff;
-		this.startButton.scale(0.5,0.5);
-		this.startButton.x=1024/2-this.startButton.width/4;
-		this.startButton.y=GameConstants.stageHeight/2-this.startButton.height/4;
-		this.startButton.on("click",this,this.onStartButtonClick);
-		this.addChild(this.startButton);
 		this.itemsToAnimate=[];
 		this.itemsToAnimateLength=0;
 		this.createFoodItemsPool();
@@ -27183,7 +27150,7 @@ var InGame=(function(_super){
 	*@param event
 	*
 	*/
-	__proto.onPauseButtonClick=function(event){
+	__proto.onPause=function(){
 		if (this.gamePaused){
 			this.gamePaused=false;
 			this.pauseDialog.close();
@@ -27200,9 +27167,11 @@ var InGame=(function(_super){
 	*
 	*/
 	__proto.drawHUD=function(){
-		this.hud=new HUD();
+		this.hud=new SceneView();
 		this.addChild(this.hud);
+		this.hud.on("dialogToGame",this,this.onHudEvent)
 		this.pauseDialog=new PauseDialog();
+		this.pauseDialog.on("dialogToGame",this,this.onPauseEvent);
 	}
 
 	/**
@@ -27211,25 +27180,73 @@ var InGame=(function(_super){
 	*/
 	__proto.drawGameOverScreen=function(){
 		this.gameOverDialog=new GameOverDialog();
-		this.gameOverDialog.on("changeScreen",this,this.onMySettle);
+		this.gameOverDialog.on("dialogToGame",this,this.onGameOverEvent);
 		this.settleDialog=new SettleDialog();
-		this.settleDialog.on("changeScreen",this,this.playAgain);
+		this.settleDialog.on("dialogToGame",this,this.onSettleEvent);
 	}
 
-	__proto.onMySettle=function(){
-		this.settleDialog.show();
-		this.settleDialog.setMyScore(this.scoreItems.toString());
+	__proto.closeAllDialog=function(){
+		if(this.pauseDialog !=null){
+			this.pauseDialog.close();
+		}
+		if(this.gameOverDialog !=null){
+			this.gameOverDialog.clearAndClose();
+		}
+		if(this.settleDialog !=null){
+			this.settleDialog.close();
+		}
+	}
+
+	__proto.onGameOverEvent=function(obj){
+		if(obj !=null && obj.id=="relive"){
+			var tmpScore=this.scoreItems;
+			this.initialize();
+			this.scoreItems=tmpScore;
+			this.hud.foodScore=tmpScore;
+			}else{
+			this.settleDialog.show();
+			this.settleDialog.setMyScore(this.scoreItems.toString());
+		}
 	}
 
 	/**
 	*Play again,when clicked on play again button in Game Over screen.
 	*
 	*/
-	__proto.playAgain=function(obj){
+	__proto.onSettleEvent=function(obj){
 		if (obj.id=="playAgain"){
 			this.gameOverFadedOut();
 		}
-		this.event("changeScreen",obj);
+	}
+
+	__proto.onPauseEvent=function(obj){
+		var bClearOverDialog=false;
+		if (obj.id=="main"){
+			this.event("changeScreen");
+			bClearOverDialog=true;
+		}
+		else if(obj.id=="restart"){
+			this.initialize();
+			bClearOverDialog=true;
+		}
+		else{
+			this.gamePaused=false;
+			this.bg.gamePaused=this.gamePaused;
+		}
+		this.pauseDialog.close();
+		if(bClearOverDialog && this.gameOverDialog !=null){
+			this.gameOverDialog.clearAndClose();
+		}
+	}
+
+	__proto.onHudEvent=function(obj){
+		if(obj.id=="coffee"){
+			this.coffee=5;
+			}else if(obj.id=="mushroom"){
+			this.mushroom=4;
+			}else if(obj.id=="pause"){
+			this.onPause();
+		}
 	}
 
 	/**
@@ -27364,8 +27381,8 @@ var InGame=(function(_super){
 		this.disposeTemporarily();
 		this.visible=true;
 		Laya.timer.frameLoop(1,this,this.calculateElapsed);
-		if (!Sounds.muted)Sounds.playMusic(Sounds.sndBgGame)
-			this.gameArea=new Rectangle(0,100,1024,GameConstants.stageHeight-250);
+		if (!Sounds.muted)Sounds.playMusic(Sounds.sndBgGame);
+		this.gameArea=new Rectangle(0,100,1024,1024/Laya.stage.width*Laya.stage.height*.7);
 		this.lives=1;
 		this.hitObstacle=0;
 		this.cameraShake=0;
@@ -27389,15 +27406,12 @@ var InGame=(function(_super){
 		this.hero.state=0;
 		this.touchX=this.hero.x;
 		this.touchY=this.hero.y;
-		this.hud.foodScore=0;
-		this.hud.lives=this.lives;
-		this.bg.state=0;
+		this.hud.init();
 		this.gamePaused=false;
 		this.bg.gamePaused=false;
 		this.bg.state=0;
 		this.bg.speed=0;
-		this.pauseButton.visible=false;
-		this.startButton.visible=true;
+		this.launchHero();
 	}
 
 	/**
@@ -27406,20 +27420,8 @@ var InGame=(function(_super){
 	*/
 	__proto.disposeTemporarily=function(){
 		SoundManager.stopAll();
-		Laya.timer.clear(this,this.calculateElapsed);
-		Laya.timer.clear(this,this.onGameTick);
-	}
-
-	/**
-	*On start button click.
-	*@param event
-	*
-	*/
-	__proto.onStartButtonClick=function(event){
-		if (!Sounds.muted)Sounds.playSound(Sounds.sndCoffee)
-			this.startButton.visible=false;
-		this.pauseButton.visible=true;
-		this.launchHero();
+		this.closeAllDialog();
+		Laya.timer.clearAll(this);
 	}
 
 	/**
@@ -27531,7 +27533,6 @@ var InGame=(function(_super){
 					this.animateWindParticles();
 					this.bg.speed=this.playerSpeed *this.elapsed;
 					this.scoreDistance+=(this.playerSpeed *this.elapsed)*0.1;
-					this.hud.distance=Math.round(this.scoreDistance);
 					break ;
 				case 2:
 					for(var i=0;i < this.itemsToAnimateLength;i++){
@@ -27661,7 +27662,7 @@ var InGame=(function(_super){
 					this.patternLength=(Math.random()*0.4+0.4)*GameConstants.stageHeight;
 				}
 				this.patternPosYstart=this.patternPosY;
-				while (this.patternPosYstart+this.patternStep < this.patternPosY+this.patternLength && this.patternPosYstart+this.patternStep < GameConstants.stageHeight *0.8){
+				while (this.patternPosYstart+this.patternStep < this.patternPosY+this.patternLength && this.patternPosYstart+this.patternStep < this.gameArea.height){
 					itemToTrack=this.itemsPool.checkOut();
 					itemToTrack.foodItemType=Math.ceil(Math.random()*5);
 					itemToTrack.x=1024+itemToTrack.width;
@@ -27748,18 +27749,18 @@ var InGame=(function(_super){
 						if (itemToTrack.foodItemType <=5){
 							this.scoreItems+=itemToTrack.foodItemType;
 							this.hud.foodScore=this.scoreItems;
-							if (!Sounds.muted)Sounds.playSound(Sounds.sndEat)
-								}
+							if (!Sounds.muted)Sounds.playSound(Sounds.sndEat);
+						}
 						else if (itemToTrack.foodItemType==6){
 							this.scoreItems+=1;
 							this.coffee=5;
-							if (!Sounds.muted)Sounds.playSound(Sounds.sndCoffee)
-								}
+							if (!Sounds.muted)Sounds.playSound(Sounds.sndCoffee);
+						}
 						else if (itemToTrack.foodItemType==7){
 							this.scoreItems+=1;
 							this.mushroom=4;
-							if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom)
-								}
+							if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom);
+						}
 						this.createEatParticle(itemToTrack);
 						this.disposeItemTemporarily(i,itemToTrack);
 					}
@@ -27891,8 +27892,8 @@ var InGame=(function(_super){
 				this.heroObstacle_sqDist=this.heroObstacle_xDist *this.heroObstacle_xDist+this.heroObstacle_yDist *this.heroObstacle_yDist;
 				if (this.heroObstacle_sqDist < 5000 && !obstacleToTrack.alreadyHit){
 					obstacleToTrack.alreadyHit=true;
-					if (!Sounds.muted)Sounds.playSound(Sounds.sndHit)
-						if (this.coffee > 0){
+					if (!Sounds.muted)Sounds.playSound(Sounds.sndHit);
+					if (this.coffee > 0){
 						if (obstacleToTrack.position=="bottom")obstacleToTrack.rotation=this.deg2rad(100);
 						else obstacleToTrack.rotation=this.deg2rad(-100);
 						this.hitObstacle=30;
@@ -27903,8 +27904,8 @@ var InGame=(function(_super){
 						else obstacleToTrack.rotation=this.deg2rad(-70);
 						this.hitObstacle=30;
 						this.playerSpeed *=0.5;
-						if (!Sounds.muted)Sounds.playSound(Sounds.sndHurt)
-							this.lives--;
+						if (!Sounds.muted)Sounds.playSound(Sounds.sndHurt);
+						this.lives--;
 						if (this.lives <=0){
 							this.lives=0;
 							this.endGame();
@@ -28029,7 +28030,11 @@ var InGame=(function(_super){
 	*
 	*/
 	__proto.calculateElapsed=function(event){
-		this.timePrevious=this.timeCurrent;
+		if(isNaN(this.timeCurrent)){
+			this.timePrevious=(new Date()).getTime();
+			}else{
+			this.timePrevious=this.timeCurrent;
+		}
 		this.timeCurrent=(new Date()).getTime();
 		this.elapsed=(this.timeCurrent-this.timePrevious)*0.001;
 	}
@@ -28048,12 +28053,6 @@ var InGame=(function(_super){
 })(Sprite)
 
 
-/**
-*This is the welcome or main menu class for the game.
-*
-*@author hsharma
-*
-*/
 //class com.hsharma.hungryHero.screens.Welcome extends laya.display.Sprite
 var Welcome=(function(_super){
 	function Welcome(){
@@ -28069,18 +28068,10 @@ var Welcome=(function(_super){
 		this.hero=null;
 		/**Back button. */
 		this.rankBtn=null;
-		/**Screen mode-"welcome" or "about". */
-		this.screenMode=null;
 		/**Current date. */
 		this._currentDate=null;
-		/**Hero art tween object. */
-		this.tween_hero=null;
-		this.rankSprite=null;
-		this.rankTexture=null;
-		this.rankCount=0;
 		Welcome.__super.call(this);
 		this.visible=false;
-		this.rankCount=1;
 		this.on("added",this,this.onAddedToStage);
 	}
 
@@ -28105,31 +28096,28 @@ var Welcome=(function(_super){
 		this.addChild(this.bg);
 		this.title=new Image(Assets.getTexture("welcome_title"))
 		this.title.x=600;
-		this.title.y=65;
-		this.title.scale(0.5,0.5);
+		this.title.y=10;
 		this.addChild(this.title);
 		this.rankBtn=new Button("welcome_rankButton");
 		this.rankBtn.x=600;
 		this.rankBtn.y=355;
-		this.rankBtn.scale(0.5,0.5);
 		this.rankBtn.on("click",this,this.onRankClick);
 		this.addChild(this.rankBtn);
 		this.hero=new Image(Assets.getTexture("welcome_hero"));
-		this.hero.x=-this.hero.width;
-		this.hero.y=130;
+		this.hero.x=130;
+		this.hero.y=100;
 		this.addChild(this.hero);
 		this.playBtn=new Button("welcome_playButton");
 		this.playBtn.x=600;
-		this.playBtn.y=535;
-		this.playBtn.scale(0.5,0.5);
+		this.playBtn.y=Laya.stage.height-this.playBtn.height-50;
 		this.playBtn.on("click",this,this.onPlayClick);
 		this.addChild(this.playBtn);
 		this.shareBtn=new Button("welcome_inviteButton");
 		this.shareBtn.x=100;
-		this.shareBtn.y=535;
-		this.shareBtn.scale(0.5,0.5);
+		this.shareBtn.y=Laya.stage.height-this.shareBtn.height-50;
 		this.shareBtn.on("click",this,this.onShareClick);
 		this.addChild(this.shareBtn);
+		this.hero.scale(0.6,0.6);
 	}
 
 	/**
@@ -28138,31 +28126,7 @@ var Welcome=(function(_super){
 	*
 	*/
 	__proto.onRankClick=function(event){
-		if (!Sounds.muted){
-			Sounds.playSound(Sounds.sndCoffee)
-		}
-		if(Browser.onMiniGame){
-			this.rankSprite=new Sprite();
-			var openDataContext=wx.getOpenDataContext();
-			var sharedCanvas=openDataContext.canvas;
-			this.rankTexture=new Texture(sharedCanvas);
-			this.rankTexture.bitmap.alwaysChange=true;
-			this.addChild(this.rankSprite);
-			var rx=(Laya.stage.width-this.rankTexture.width)/2;
-			var ry=(Laya.stage.height-this.rankTexture.height)/2;
-			this.rankSprite.graphics.clear();
-			if((this.rankCount%2)==1){
-				openDataContext.postMessage({
-					id:'showRank'
-				});
-				this.rankSprite.graphics.drawTexture(this.rankTexture,rx,ry,this.rankTexture.width,this.rankTexture.height);
-				}else{
-				openDataContext.postMessage({
-					id:'hideRank'
-				});
-			}
-			this.rankCount+=1;
-		}
+		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom);
 	}
 
 	/**
@@ -28172,31 +28136,18 @@ var Welcome=(function(_super){
 	*/
 	__proto.onPlayClick=function(event){
 		console.log("play");
-		this.event("changeScreen",{id:"play"});
-		if (!Sounds.muted)Sounds.playSound(Sounds.sndCoffee)
-			}
+		if (!Sounds.muted)Sounds.playSound(Sounds.sndCoffee);
+		this.event("changeScreen");
+	}
+
 	/**
 	*On about button click.
 	*@param event
 	*
 	*/
 	__proto.onShareClick=function(event){
-		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom)
-			this.showShare();
-	}
-
-	/**
-	*Show about screen.
-	*
-	*/
-	__proto.showShare=function(){
-		if(Browser.onMiniGame){
-			wx.shareAppMessage({
-				title:"饿了么英雄",
-				imageUrl:"http://www.hungryherogame.com/images/promo.jpg",
-				query:""
-			});
-		}
+		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom);
+		WXUtils.instance.showShare(null);
 	}
 
 	/**
@@ -28205,18 +28156,8 @@ var Welcome=(function(_super){
 	*/
 	__proto.initialize=function(){
 		this.disposeTemporarily();
+		if (!Sounds.muted)Sounds.playMusic(Sounds.sndBgMain);
 		this.visible=true;
-		if (this.screenMode !="about"){
-			if (!Sounds.muted)Sounds.playMusic(Sounds.sndBgMain)
-				}
-		this.screenMode="welcome";
-		this.hero.visible=true;
-		this.playBtn.visible=true;
-		this.shareBtn.visible=true;
-		this.rankBtn.visible=true;
-		this.hero.x=-this.hero.width;
-		this.hero.y=100;
-		this.hero.x=80;
 		Laya.timer.frameLoop(1,this,this.floatingAnimation);
 	}
 
@@ -28227,10 +28168,10 @@ var Welcome=(function(_super){
 	*/
 	__proto.floatingAnimation=function(event){
 		this._currentDate=new Date();
-		this.hero.y=130+(Math.cos(this._currentDate.getTime()*0.002))*25;
-		this.rankBtn.y=355+(Math.cos(this._currentDate.getTime()*0.002))*10;
-		this.playBtn.y=535+(Math.cos(this._currentDate.getTime()*0.002))*10;
-		this.shareBtn.y=535+(Math.cos(this._currentDate.getTime()*0.002))*10;
+		this.hero.y=(Laya.stage.height-this.hero.height)/2+20;
+		this.hero.y=this.hero.y+(Math.cos(this._currentDate.getTime()*0.002))*10;
+		this.rankBtn.y=(Laya.stage.height-this.rankBtn.height)/2+20;
+		this.rankBtn.y=this.rankBtn.y+(Math.cos(this._currentDate.getTime()*0.002))*10;
 	}
 
 	/**
@@ -28240,276 +28181,10 @@ var Welcome=(function(_super){
 	__proto.disposeTemporarily=function(){
 		this.visible=false;
 		Laya.timer.clear(this,this.floatingAnimation);
-		if (this.screenMode !="about"){
-			SoundManager.stopAll();
-		}
+		SoundManager.stopAll();
 	}
 
 	return Welcome;
-})(Sprite)
-
-
-//class com.hsharma.hungryHero.ui.GameOverContainer extends laya.display.Sprite
-var GameOverContainer=(function(_super){
-	function GameOverContainer(){
-		/**Background image. */
-		this.bg=null;
-		/**Message text field. */
-		this.messageText=null;
-		/**Score container. */
-		this.scoreContainer=null;
-		/**Score display-distance. */
-		this.distanceText=null;
-		/**Score display-score. */
-		this.scoreText=null;
-		/**Play again button. */
-		this.playAgainBtn=null;
-		/**Main Menu button. */
-		this.mainBtn=null;
-		/**About button. */
-		this.aboutBtn=null;
-		/**Score value-distance. */
-		this._distance=0;
-		/**Score value-score. */
-		this._score=0;
-		GameOverContainer.__super.call(this);
-		this.on("added",this,this.onAddedToStage);
-	}
-
-	__class(GameOverContainer,'com.hsharma.hungryHero.ui.GameOverContainer',_super);
-	var __proto=GameOverContainer.prototype;
-	/**
-	*On added to stage.
-	*@param event
-	*
-	*/
-	__proto.onAddedToStage=function(event){
-		this.off("added",this,this.onAddedToStage);
-		this.drawGameOver();
-	}
-
-	/**
-	*Draw game over screen.
-	*
-	*/
-	__proto.drawGameOver=function(){
-		this.bg=new Quad(1024,GameConstants.stageHeight,0x000000);
-		this.bg.alpha=0.75;
-		this.addChild(this.bg);
-		this.messageText=new StarlingTextField(1024,GameConstants.stageHeight *0.5,"HERO WAS KILLED!",null,20,"#f3e75f");
-		this.messageText.y=(GameConstants.stageHeight *20)/100;
-		this.addChild(this.messageText);
-		this.scoreContainer=new Sprite();
-		this.scoreContainer.y=(GameConstants.stageHeight *40)/100;
-		this.addChild(this.scoreContainer);
-		this.distanceText=new StarlingTextField(1024,100,"DISTANCE TRAVELLED: 0000000",null,20,"#ffffff");
-		this.scoreContainer.addChild(this.distanceText);
-		this.scoreText=new StarlingTextField(1024,100,"SCORE: 0000000",null,20,"#ffffff");
-		this.scoreText.height=this.scoreText.height;
-		this.scoreText.y=this.distanceText.y+this.distanceText.height+this.scoreText.height *0.5;
-		this.scoreContainer.addChild(this.scoreText);
-		this.mainBtn=new Button("gameOver_mainButton")
-		this.mainBtn.y=(GameConstants.stageHeight *70)/100;
-		this.mainBtn.on("click",this,this.onMainClick);
-		this.addChild(this.mainBtn);
-		this.playAgainBtn=new Button("gameOver_playAgainButton")
-		this.playAgainBtn.y=this.mainBtn.y+this.mainBtn.height *0.5-this.playAgainBtn.height *0.5;
-		this.playAgainBtn.on("click",this,this.onPlayAgainClick);
-		this.addChild(this.playAgainBtn);
-		this.aboutBtn=new Button("gameOver_aboutButton");
-		this.aboutBtn.y=this.playAgainBtn.y+this.playAgainBtn.height *0.5-this.aboutBtn.height *0.5;
-		this.aboutBtn.on("click",this,this.onAboutClick);
-		this.addChild(this.aboutBtn);
-		this.mainBtn.x=1024 *0.5-(this.mainBtn.width+this.playAgainBtn.width+this.aboutBtn.width+30)*0.5;
-		this.playAgainBtn.x=this.mainBtn.x+this.mainBtn.width+10;
-		this.aboutBtn.x=this.playAgainBtn.x+this.playAgainBtn.width+10;
-	}
-
-	/**
-	*On play-again button click.
-	*@param event
-	*
-	*/
-	__proto.onPlayAgainClick=function(event){
-		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom)
-			this.event("changeScreen",{id:"playAgain"});
-	}
-
-	/**
-	*On main menu button click.
-	*@param event
-	*
-	*/
-	__proto.onMainClick=function(event){
-		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom)
-			this.event("changeScreen",{id:"mainMenu"});
-	}
-
-	/**
-	*On about button click.
-	*@param event
-	*
-	*/
-	__proto.onAboutClick=function(event){
-		if (!Sounds.muted)Sounds.playSound(Sounds.sndMushroom)
-			this.event("changeScreen",{id:"about"});
-	}
-
-	/**
-	*Initialize Game Over container.
-	*@param _score
-	*@param _distance
-	*
-	*/
-	__proto.initialize=function(_score,_distance){
-		this._distance=_distance;
-		this._score=_score;
-		this.distanceText.text="DISTANCE TRAVELLED: "+this._distance.toString();
-		this.scoreText.text="SCORE: "+this._score.toString();
-		this.alpha=0;
-		this.visible=true;
-	}
-
-	/**
-	*Score.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'score',function(){return this._score;});
-	/**
-	*Distance.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'distance',function(){return this._distance;});
-	return GameOverContainer;
-})(Sprite)
-
-
-/**
-*This class handles the Heads Up Display for the game.
-*
-*@author hsharma
-*
-*/
-//class com.hsharma.hungryHero.ui.HUD extends laya.display.Sprite
-var HUD=(function(_super){
-	function HUD(){
-		/**Lives left. */
-		this._lives=0;
-		/**Distance travelled. */
-		this._distance=0;
-		/**Food items score. */
-		this._foodScore=0;
-		/**Lives icon. */
-		this.livesImg=null;
-		/**Lives TextField. */
-		this.livesText=null;
-		/**Food Score icon. */
-		this.foodScoreImg=null;
-		/**Food Score TextField. */
-		this.foodScoreText=null;
-		//private var fontScoreValue:Font;
-		this.item1Img=null;
-		this.item2Img=null;
-		this.viewVideoImg=null;
-		HUD.__super.call(this);
-		this.on("added",this,this.onAddedToStage);
-	}
-
-	__class(HUD,'com.hsharma.hungryHero.ui.HUD',_super);
-	var __proto=HUD.prototype;
-	/**
-	*On added to stage.
-	*@param event
-	*
-	*/
-	__proto.onAddedToStage=function(event){
-		this.off("added",this,this.onAddedToStage);
-		this.livesImg=new Image(Assets.getTexture("img_life"));
-		this.livesImg.x=150;
-		this.livesImg.y=20;
-		this.livesImg.scale(0.5,0.5);
-		this.addChild(this.livesImg);
-		this.livesText=new StarlingTextField(150,20,"5","Microsoft YaHei",20,"#ffffff");
-		this.livesText.x=Math.floor(this.livesImg.x+(this.livesImg.width*this.livesImg.scaleX)/2-20);
-		this.livesText.y=this.livesImg.y+5;
-		this.addChild(this.livesText);
-		this.foodScoreImg=new Image(Assets.getTexture("img_score"));
-		this.foodScoreImg.x=660;
-		this.foodScoreImg.y=20;
-		this.foodScoreImg.scale(0.5,0.5);
-		this.addChild(this.foodScoreImg);
-		this.foodScoreText=new StarlingTextField(150,20,"0","Microsoft YaHei",20,"#ffffff");
-		this.foodScoreText.x=Math.floor(this.foodScoreImg.x+(this.foodScoreImg.width*this.foodScoreImg.scaleX)/2-20);
-		this.foodScoreText.y=this.foodScoreImg.y+5;
-		this.addChild(this.foodScoreText);
-		this.item1Img=new Image(Assets.getTexture("item6"));
-		this.item2Img=new Image(Assets.getTexture("item7"));
-		this.viewVideoImg=new Image(Assets.getTexture("img_view_video"));
-		this.viewVideoImg.x=20;
-		this.viewVideoImg.scale(0.5,0.5);
-		this.viewVideoImg.y=Laya.stage.height-this.viewVideoImg.height*this.viewVideoImg.scaleY-20;
-		this.addChild(this.viewVideoImg);
-		this.item1Img.x=50;
-		this.item1Img.y=this.viewVideoImg.y-this.viewVideoImg.height*this.viewVideoImg.scaleY-5;
-		var circleImg1=new Image(Assets.getTexture("img_circle"));
-		circleImg1.scale(0.5,0.5);
-		circleImg1.x=40;
-		var circleLab1=new StarlingTextField(20,20,"3","Microsoft YaHei",20,"#ffffff");
-		circleLab1.x=circleImg1.width/4;
-		circleLab1.y=circleImg1.height/4;
-		circleImg1.addChild(circleLab1);
-		this.item1Img.addChild(circleImg1);
-		this.addChild(this.item1Img);
-		this.item2Img.x=this.item1Img.x+this.item1Img.width+20;
-		this.item2Img.y=this.item1Img.y;
-		var circleImg2=new Image(Assets.getTexture("img_circle"));
-		circleImg2.scale(0.5,0.5);
-		circleImg2.x=40;
-		var circleLab2=new StarlingTextField(20,20,"1","Microsoft YaHei",20,"#ffffff");
-		circleLab2.x=circleImg2.width/4;
-		circleLab2.y=circleImg2.height/4;
-		circleImg2.addChild(circleLab2);
-		this.item2Img.addChild(circleImg2);
-		this.addChild(this.item2Img);
-	}
-
-	/**
-	*Add leading zeros to the score numbers.
-	*@param value
-	*@return
-	*
-	*/
-	__proto.addZeros=function(value){
-		var ret=String(value);
-		while (ret.length < 7){
-			ret="0"+ret;
-		}
-		return ret;
-	}
-
-	/**
-	*Lives left.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'lives',function(){return this._lives;},function(value){
-		this._lives=value;
-		this.livesText.text=this._lives.toString();
-	});
-
-	/**
-	*Food items score.
-	*@return
-	*
-	*/
-	__getset(0,__proto,'foodScore',function(){return this._foodScore;},function(value){
-		this._foodScore=value;
-		this.foodScoreText.text=this._foodScore.toString();
-	});
-
-	return HUD;
 })(Sprite)
 
 
@@ -42106,24 +41781,6 @@ var WebGLImage=(function(_super){
 
 
 /**
-*This class is the pause button for the in-game screen.
-*
-*@author hsharma
-*
-*/
-//class com.hsharma.hungryHero.ui.PauseButton extends com.hsharma.hungryHero.Button
-var PauseButton=(function(_super){
-	//private var pauseImage:Bitmap;
-	function PauseButton(){
-		PauseButton.__super.call(this,"pauseButton");
-	}
-
-	__class(PauseButton,'com.hsharma.hungryHero.ui.PauseButton',_super);
-	return PauseButton;
-})(Button)
-
-
-/**
 *This class is the sound/mute button.
 *
 *@author hsharma
@@ -42515,6 +42172,35 @@ var Dialog=(function(_super){
 })(View)
 
 
+//class ui.SkillVideoUI extends laya.ui.View
+var SkillVideoUI=(function(_super){
+	function SkillVideoUI(){
+		this.img_coffee=null;
+		this.lab_coffee=null;
+		this.img_mushroom=null;
+		this.lab_mushroom=null;
+		this.img_live=null;
+		this.lab_lives=null;
+		this.img_score=null;
+		this.lab_score=null;
+		this.img_pause=null;
+		this.img_mushroom_tips=null;
+		this.img_coffee_tips=null;
+		SkillVideoUI.__super.call(this);
+	}
+
+	__class(SkillVideoUI,'ui.SkillVideoUI',_super);
+	var __proto=SkillVideoUI.prototype;
+	__proto.createChildren=function(){
+		laya.ui.Component.prototype.createChildren.call(this);
+		this.createView(SkillVideoUI.uiView);
+	}
+
+	SkillVideoUI.uiView={"type":"View","props":{"width":1024,"height":768},"child":[{"type":"Image","props":{"y":649,"x":69,"width":100,"var":"img_coffee","skin":"mySpritesheet/item6.png","height":100},"child":[{"type":"Image","props":{"y":-6,"x":53,"skin":"mySpritesheet/img_circle.png"},"child":[{"type":"Label","props":{"x":10,"var":"lab_coffee","top":3,"text":"1","rotation":0,"fontSize":25,"font":"Helvetica","color":"#ffffff","bold":false,"align":"center"}}]}]},{"type":"Image","props":{"y":649,"x":202,"width":100,"var":"img_mushroom","skin":"mySpritesheet/item7.png","height":100},"child":[{"type":"Image","props":{"y":-6,"x":51,"skin":"mySpritesheet/img_circle.png"},"child":[{"type":"Label","props":{"x":10,"var":"lab_mushroom","top":3,"text":"1","rotation":0,"fontSize":25,"font":"Helvetica","color":"#ffffff","bold":false,"align":"center"}}]}]},{"type":"Image","props":{"y":22,"x":219,"var":"img_live","skin":"mySpritesheet/img_life.png"},"child":[{"type":"Label","props":{"y":1,"x":80,"width":34,"var":"lab_lives","text":"666","height":30,"fontSize":25,"font":"Microsoft YaHei","color":"#eaeaea","bold":true,"align":"left"}}]},{"type":"Image","props":{"y":21,"x":627,"var":"img_score","skin":"mySpritesheet/img_score.png"},"child":[{"type":"Label","props":{"y":1,"x":78,"width":96,"var":"lab_score","text":"85","height":30,"fontSize":23,"font":"Microsoft YaHei","color":"#eaeaea","bold":true,"align":"left"}}]},{"type":"Image","props":{"y":16,"x":41,"width":47,"visible":false,"skin":"mySpritesheet/soundOff.png","height":47}},{"type":"Image","props":{"y":16,"x":41,"width":47,"visible":false,"skin":"mySpritesheet/soundOn0000.png","height":47}},{"type":"Image","props":{"y":16,"x":41,"width":47,"visible":false,"skin":"mySpritesheet/soundOn0001.png","height":47}},{"type":"Image","props":{"y":16,"x":41,"width":47,"visible":false,"skin":"mySpritesheet/soundOn0002.png","height":47}},{"type":"Image","props":{"y":16,"x":113,"width":47,"var":"img_pause","skin":"mySpritesheet/pauseButton.png","height":47}},{"type":"Image","props":{"y":359,"x":522,"var":"img_mushroom_tips","skin":"mySpritesheet/daojumogu_text.png","anchorY":0.5,"anchorX":0.5}},{"type":"Image","props":{"y":359,"x":522,"var":"img_coffee_tips","skin":"mySpritesheet/daojukafei_text.png","anchorY":0.5,"anchorX":0.5}}]};
+	return SkillVideoUI;
+})(View)
+
+
 /**
 *<code>HBox</code> 是一个水平布局容器类。
 */
@@ -42628,6 +42314,97 @@ var VBox=(function(_super){
 	VBox.RIGHT="right";
 	return VBox;
 })(LayoutBox)
+
+
+/**
+*<code>RadioGroup</code> 控件定义一组 <code>Radio</code> 控件，这些控件相互排斥；
+*因此，用户每次只能选择一个 <code>Radio</code> 控件。
+*
+*@example <caption>以下示例代码，创建了一个 <code>RadioGroup</code> 实例。</caption>
+*package
+*{
+	*import laya.ui.Radio;
+	*import laya.ui.RadioGroup;
+	*import laya.utils.Handler;
+	*public class RadioGroup_Example
+	*{
+		*public function RadioGroup_Example()
+		*{
+			*Laya.init(640,800);//设置游戏画布宽高。
+			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+			*Laya.loader.load(["resource/ui/radio.png"],Handler.create(this,onLoadComplete));//加载资源。
+			*}
+		*private function onLoadComplete():void
+		*{
+			*var radioGroup:RadioGroup=new RadioGroup();//创建一个 RadioGroup 类的实例对象 radioGroup 。
+			*radioGroup.pos(100,100);//设置 radioGroup 的位置信息。
+			*radioGroup.labels="item0,item1,item2";//设置 radioGroup 的标签集。
+			*radioGroup.skin="resource/ui/radio.png";//设置 radioGroup 的皮肤。
+			*radioGroup.space=10;//设置 radioGroup 的项间隔距离。
+			*radioGroup.selectHandler=new Handler(this,onSelect);//设置 radioGroup 的选择项发生改变时执行的处理器。
+			*Laya.stage.addChild(radioGroup);//将 radioGroup 添加到显示列表。
+			*}
+		*private function onSelect(index:int):void
+		*{
+			*trace("当前选择的单选按钮索引: index= ",index);
+			*}
+		*}
+	*}
+*@example
+*Laya.init(640,800);//设置游戏画布宽高、渲染模式
+*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
+*Laya.loader.load(["resource/ui/radio.png"],laya.utils.Handler.create(this,onLoadComplete));
+*function onLoadComplete(){
+	*var radioGroup=new laya.ui.RadioGroup();//创建一个 RadioGroup 类的实例对象 radioGroup 。
+	*radioGroup.pos(100,100);//设置 radioGroup 的位置信息。
+	*radioGroup.labels="item0,item1,item2";//设置 radioGroup 的标签集。
+	*radioGroup.skin="resource/ui/radio.png";//设置 radioGroup 的皮肤。
+	*radioGroup.space=10;//设置 radioGroup 的项间隔距离。
+	*radioGroup.selectHandler=new laya.utils.Handler(this,onSelect);//设置 radioGroup 的选择项发生改变时执行的处理器。
+	*Laya.stage.addChild(radioGroup);//将 radioGroup 添加到显示列表。
+	*}
+*function onSelect(index){
+	*console.log("当前选择的单选按钮索引: index= ",index);
+	*}
+*@example
+*import Radio=laya.ui.Radio;
+*import RadioGroup=laya.ui.RadioGroup;
+*import Handler=laya.utils.Handler;
+*class RadioGroup_Example {
+	*constructor(){
+		*Laya.init(640,800);//设置游戏画布宽高。
+		*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
+		*Laya.loader.load(["resource/ui/radio.png"],Handler.create(this,this.onLoadComplete));//加载资源。
+		*}
+	*private onLoadComplete():void {
+		*var radioGroup:RadioGroup=new RadioGroup();//创建一个 RadioGroup 类的实例对象 radioGroup 。
+		*radioGroup.pos(100,100);//设置 radioGroup 的位置信息。
+		*radioGroup.labels="item0,item1,item2";//设置 radioGroup 的标签集。
+		*radioGroup.skin="resource/ui/radio.png";//设置 radioGroup 的皮肤。
+		*radioGroup.space=10;//设置 radioGroup 的项间隔距离。
+		*radioGroup.selectHandler=new Handler(this,this.onSelect);//设置 radioGroup 的选择项发生改变时执行的处理器。
+		*Laya.stage.addChild(radioGroup);//将 radioGroup 添加到显示列表。
+		*}
+	*private onSelect(index:number):void {
+		*console.log("当前选择的单选按钮索引: index= ",index);
+		*}
+	*}
+*/
+//class laya.ui.RadioGroup extends laya.ui.UIGroup
+var RadioGroup=(function(_super){
+	function RadioGroup(){
+		RadioGroup.__super.call(this);;
+	}
+
+	__class(RadioGroup,'laya.ui.RadioGroup',_super);
+	var __proto=RadioGroup.prototype;
+	/**@inheritDoc */
+	__proto.createItem=function(skin,label){
+		return new Radio(skin,label);
+	}
+
+	return RadioGroup;
+})(UIGroup)
 
 
 /**
@@ -42855,97 +42632,6 @@ var TextArea=(function(_super){
 
 
 /**
-*<code>RadioGroup</code> 控件定义一组 <code>Radio</code> 控件，这些控件相互排斥；
-*因此，用户每次只能选择一个 <code>Radio</code> 控件。
-*
-*@example <caption>以下示例代码，创建了一个 <code>RadioGroup</code> 实例。</caption>
-*package
-*{
-	*import laya.ui.Radio;
-	*import laya.ui.RadioGroup;
-	*import laya.utils.Handler;
-	*public class RadioGroup_Example
-	*{
-		*public function RadioGroup_Example()
-		*{
-			*Laya.init(640,800);//设置游戏画布宽高。
-			*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-			*Laya.loader.load(["resource/ui/radio.png"],Handler.create(this,onLoadComplete));//加载资源。
-			*}
-		*private function onLoadComplete():void
-		*{
-			*var radioGroup:RadioGroup=new RadioGroup();//创建一个 RadioGroup 类的实例对象 radioGroup 。
-			*radioGroup.pos(100,100);//设置 radioGroup 的位置信息。
-			*radioGroup.labels="item0,item1,item2";//设置 radioGroup 的标签集。
-			*radioGroup.skin="resource/ui/radio.png";//设置 radioGroup 的皮肤。
-			*radioGroup.space=10;//设置 radioGroup 的项间隔距离。
-			*radioGroup.selectHandler=new Handler(this,onSelect);//设置 radioGroup 的选择项发生改变时执行的处理器。
-			*Laya.stage.addChild(radioGroup);//将 radioGroup 添加到显示列表。
-			*}
-		*private function onSelect(index:int):void
-		*{
-			*trace("当前选择的单选按钮索引: index= ",index);
-			*}
-		*}
-	*}
-*@example
-*Laya.init(640,800);//设置游戏画布宽高、渲染模式
-*Laya.stage.bgColor="#efefef";//设置画布的背景颜色
-*Laya.loader.load(["resource/ui/radio.png"],laya.utils.Handler.create(this,onLoadComplete));
-*function onLoadComplete(){
-	*var radioGroup=new laya.ui.RadioGroup();//创建一个 RadioGroup 类的实例对象 radioGroup 。
-	*radioGroup.pos(100,100);//设置 radioGroup 的位置信息。
-	*radioGroup.labels="item0,item1,item2";//设置 radioGroup 的标签集。
-	*radioGroup.skin="resource/ui/radio.png";//设置 radioGroup 的皮肤。
-	*radioGroup.space=10;//设置 radioGroup 的项间隔距离。
-	*radioGroup.selectHandler=new laya.utils.Handler(this,onSelect);//设置 radioGroup 的选择项发生改变时执行的处理器。
-	*Laya.stage.addChild(radioGroup);//将 radioGroup 添加到显示列表。
-	*}
-*function onSelect(index){
-	*console.log("当前选择的单选按钮索引: index= ",index);
-	*}
-*@example
-*import Radio=laya.ui.Radio;
-*import RadioGroup=laya.ui.RadioGroup;
-*import Handler=laya.utils.Handler;
-*class RadioGroup_Example {
-	*constructor(){
-		*Laya.init(640,800);//设置游戏画布宽高。
-		*Laya.stage.bgColor="#efefef";//设置画布的背景颜色。
-		*Laya.loader.load(["resource/ui/radio.png"],Handler.create(this,this.onLoadComplete));//加载资源。
-		*}
-	*private onLoadComplete():void {
-		*var radioGroup:RadioGroup=new RadioGroup();//创建一个 RadioGroup 类的实例对象 radioGroup 。
-		*radioGroup.pos(100,100);//设置 radioGroup 的位置信息。
-		*radioGroup.labels="item0,item1,item2";//设置 radioGroup 的标签集。
-		*radioGroup.skin="resource/ui/radio.png";//设置 radioGroup 的皮肤。
-		*radioGroup.space=10;//设置 radioGroup 的项间隔距离。
-		*radioGroup.selectHandler=new Handler(this,this.onSelect);//设置 radioGroup 的选择项发生改变时执行的处理器。
-		*Laya.stage.addChild(radioGroup);//将 radioGroup 添加到显示列表。
-		*}
-	*private onSelect(index:number):void {
-		*console.log("当前选择的单选按钮索引: index= ",index);
-		*}
-	*}
-*/
-//class laya.ui.RadioGroup extends laya.ui.UIGroup
-var RadioGroup=(function(_super){
-	function RadioGroup(){
-		RadioGroup.__super.call(this);;
-	}
-
-	__class(RadioGroup,'laya.ui.RadioGroup',_super);
-	var __proto=RadioGroup.prototype;
-	/**@inheritDoc */
-	__proto.createItem=function(skin,label){
-		return new Radio(skin,label);
-	}
-
-	return RadioGroup;
-})(UIGroup)
-
-
-/**
 *<code>Tab</code> 组件用来定义选项卡按钮组。 *
 *@internal <p>属性：<code>selectedIndex</code> 的默认值为-1。</p>
 *
@@ -43041,6 +42727,8 @@ var Tab=(function(_super){
 var GameOverUI=(function(_super){
 	function GameOverUI(){
 		this.myscore=null;
+		this.img_invite=null;
+		this.lab_lefttime=null;
 		GameOverUI.__super.call(this);
 	}
 
@@ -43051,7 +42739,7 @@ var GameOverUI=(function(_super){
 		this.createView(GameOverUI.uiView);
 	}
 
-	GameOverUI.uiView={"type":"Dialog","props":{"width":400,"height":400,"alpha":1},"child":[{"type":"Image","props":{"y":0,"x":0,"width":400,"skin":"gameOverDialog/img_bg.png","height":300},"child":[{"type":"Image","props":{"y":11,"x":54,"width":269,"skin":"gameOverDialog/img_score.png","height":55}},{"type":"Label","props":{"y":79,"x":50,"width":300,"var":"myscore","text":"0","name":"myscore","height":68,"fontSize":40,"font":"Microsoft YaHei","color":"#ffffff","bold":false,"align":"center"}},{"type":"Image","props":{"y":180,"x":31,"width":337,"skin":"gameOverDialog/img_invite.png","height":92},"child":[{"type":"Label","props":{"y":28,"x":269,"text":"20","fontSize":30,"font":"Microsoft YaHei","color":"#ffff00","bold":true,"align":"center"}}]}]},{"type":"Image","props":{"y":319,"x":40,"width":319,"skin":"gameOverDialog/img_pass.png","name":"close","mouseEnabled":true,"height":71}}]};
+	GameOverUI.uiView={"type":"Dialog","props":{"width":1024,"height":576,"alpha":1},"child":[{"type":"Image","props":{"y":97,"x":272,"width":489,"skin":"gameOverDialog/img_bg.png","height":300},"child":[{"type":"Image","props":{"y":34,"x":154,"width":183,"skin":"gameOverDialog/img_score.png","height":40}},{"type":"Label","props":{"y":108,"x":144,"width":211,"var":"myscore","text":"0","name":"myscore","height":39,"fontSize":35,"font":"Microsoft YaHei","color":"#ffffff","bold":false,"align":"center"}},{"type":"Image","props":{"y":182,"x":93,"width":323,"var":"img_invite","skin":"gameOverDialog/img_invite.png","mouseEnabled":true,"height":88},"child":[{"type":"Label","props":{"y":24,"x":244,"var":"lab_lefttime","text":"20","fontSize":30,"font":"Microsoft YaHei","color":"#ffff00","bold":true,"align":"center"}}]}]},{"type":"Image","props":{"y":446,"x":425,"width":195,"skin":"gameOverDialog/img_pass.png","name":"close","mouseEnabled":true,"height":34}}]};
 	return GameOverUI;
 })(Dialog)
 
@@ -43059,7 +42747,10 @@ var GameOverUI=(function(_super){
 //class ui.PauseDialogUI extends laya.ui.Dialog
 var PauseDialogUI=(function(_super){
 	function PauseDialogUI(){
-		PauseDialogUI.__super.call(this);;
+		this.img_main=null;
+		this.img_restart=null;
+		this.img_continue=null;
+		PauseDialogUI.__super.call(this);
 	}
 
 	__class(PauseDialogUI,'ui.PauseDialogUI',_super);
@@ -43069,7 +42760,7 @@ var PauseDialogUI=(function(_super){
 		this.createView(PauseDialogUI.uiView);
 	}
 
-	PauseDialogUI.uiView={"type":"Dialog","props":{"width":759,"height":452},"child":[{"type":"Image","props":{"y":0,"x":0,"skin":"pauseDialog/img_bj.png"},"child":[{"type":"Image","props":{"y":137,"x":39,"skin":"pauseDialog/img_home.png"}},{"type":"Image","props":{"y":133,"x":291,"skin":"pauseDialog/img_restart.png"}},{"type":"Image","props":{"y":136,"x":538,"skin":"pauseDialog/img_run.png"}},{"type":"Button","props":{"y":-22,"x":700,"stateNum":1,"skin":"pauseDialog/btn_close.png","name":"close"}}]}]};
+	PauseDialogUI.uiView={"type":"Dialog","props":{"width":1024,"height":576},"child":[{"type":"Image","props":{"y":141,"x":275,"width":474,"skin":"pauseDialog/img_bj.png","height":282},"child":[{"type":"Image","props":{"y":105,"x":47,"width":97,"var":"img_main","skin":"pauseDialog/img_home.png","mouseEnabled":true,"height":123}},{"type":"Image","props":{"y":105,"x":197,"width":98,"var":"img_restart","skin":"pauseDialog/img_restart.png","mouseEnabled":true,"height":123}},{"type":"Image","props":{"y":108,"x":343,"width":90,"var":"img_continue","skin":"pauseDialog/img_run.png","height":122}},{"type":"Button","props":{"y":-14,"x":440,"width":43,"stateNum":1,"skin":"pauseDialog/btn_close.png","name":"close","height":44}}]}]};
 	return PauseDialogUI;
 })(Dialog)
 
@@ -43079,6 +42770,7 @@ var SettleDialogUI=(function(_super){
 	function SettleDialogUI(){
 		this.myscore=null;
 		this.showRank=null;
+		this.rank_box=null;
 		SettleDialogUI.__super.call(this);
 	}
 
@@ -43089,9 +42781,136 @@ var SettleDialogUI=(function(_super){
 		this.createView(SettleDialogUI.uiView);
 	}
 
-	SettleDialogUI.uiView={"type":"Dialog","props":{"width":400,"height":400,"alpha":1},"child":[{"type":"Image","props":{"y":0,"x":0,"width":400,"skin":"gameOverDialog/img_bg.png","height":300,"alpha":1},"child":[{"type":"Image","props":{"y":12,"x":68,"width":264,"skin":"gameOverDialog/img_curscore.png","height":42}},{"type":"Label","props":{"y":70,"x":50,"width":300,"var":"myscore","text":"0","name":"myscore","height":60,"fontSize":40,"font":"Microsoft YaHei","color":"#ffffff","bold":false,"align":"center"}},{"type":"Label","props":{"y":270,"x":50,"width":300,"var":"showRank","underline":true,"text":"查看完整排行榜","name":"showRank","mouseEnabled":true,"italic":false,"hitTestPrior":false,"height":30,"fontSize":20,"font":"Microsoft YaHei","color":"#000000","bold":false,"align":"center"}}]},{"type":"Image","props":{"y":318,"x":64,"width":271,"skin":"gameOverDialog/img_again.png","name":"close","mouseEnabled":true,"height":60}}]};
+	SettleDialogUI.uiView={"type":"Dialog","props":{"width":1024,"height":576,"alpha":1},"child":[{"type":"Image","props":{"y":87,"x":270,"width":517,"skin":"gameOverDialog/img_bg.png","height":323,"alpha":1},"child":[{"type":"Image","props":{"y":49,"x":178,"width":166,"skin":"gameOverDialog/img_curscore.png","height":40}},{"type":"Label","props":{"y":119,"x":125,"width":273,"var":"myscore","text":"0","name":"myscore","height":47,"fontSize":35,"font":"Microsoft YaHei","color":"#ffffff","bold":false,"align":"center"}},{"type":"Label","props":{"y":289,"x":114,"width":300,"var":"showRank","underline":true,"text":"查看完整排行榜","name":"showRank","mouseEnabled":true,"italic":false,"hitTestPrior":false,"height":30,"fontSize":20,"font":"Microsoft YaHei","color":"#000000","bold":false,"align":"center"}}]},{"type":"Image","props":{"y":418,"x":373,"width":317,"skin":"gameOverDialog/img_again.png","name":"close","mouseEnabled":true,"height":92}},{"type":"Sprite","props":{"y":258,"x":317,"var":"rank_box"}}]};
 	return SettleDialogUI;
 })(Dialog)
+
+
+/**
+*...
+*@dengcs
+*/
+//class view.SceneView extends ui.SkillVideoUI
+var SceneView=(function(_super){
+	function SceneView(){
+		/**Lives left. */
+		this._lives=0;
+		/**Distance travelled. */
+		this._distance=0;
+		/**Food items score. */
+		this._foodScore=0;
+		//咖啡数
+		this._coffee=0;
+		//蘑菇数
+		this._mushroom=0;
+		SceneView.__super.call(this);
+		this.img_mushroom_tips.alpha=0;
+		this.img_coffee_tips.alpha=0;
+		this.img_coffee.on("click",this,this.onAddCoffee);
+		this.img_mushroom.on("click",this,this.onAddMushroom);
+		this.img_pause.on("click",this,this.onPause);
+		this.onResize();
+	}
+
+	__class(SceneView,'view.SceneView',_super);
+	var __proto=SceneView.prototype;
+	__proto.init=function(){
+		this.coffee=1;
+		this.mushroom=1;
+		this.lives=1;
+		this.foodScore=0;
+	}
+
+	__proto.onResize=function(){
+		PositionHelper.relocateY(this.img_coffee);
+		PositionHelper.relocateY(this.img_mushroom);
+		PositionHelper.relocateCenter(this.img_mushroom_tips);
+		PositionHelper.relocateCenter(this.img_coffee_tips);
+	}
+
+	__proto.onVAD=function(type){
+		if(type==1){
+			WXUtils.instance.showShare(Handler.create(this,this.addMushroom,null,true));
+			}else{
+			WXUtils.instance.showShare(Handler.create(this,this.addCoffee,null,true));
+		}
+	}
+
+	__proto.onPause=function(){
+		this.event("dialogToGame",{id:"pause"});
+	}
+
+	__proto.addCoffee=function(){
+		this.coffee++;
+		this.img_coffee_tips.alpha=1;
+		Tween.to(this.img_coffee_tips,{alpha:0},1000);
+	}
+
+	__proto.addMushroom=function(){
+		this.mushroom++;
+		this.img_mushroom_tips.alpha=1;
+		Tween.to(this.img_mushroom_tips,{alpha:0},1000);
+	}
+
+	__proto.onAddCoffee=function(){
+		if(this.coffee>0){
+			this.coffee--;
+			this.event("dialogToGame",{id:"coffee"});
+			}else{
+			this.onVAD(0);
+		}
+	}
+
+	__proto.onAddMushroom=function(){
+		if(this.mushroom>0){
+			this.mushroom--;
+			this.event("dialogToGame",{id:"mushroom"});
+			}else{
+			this.onVAD(1);
+		}
+	}
+
+	/**
+	*Lives left.
+	*@return
+	*
+	*/
+	__getset(0,__proto,'lives',function(){return this._lives;},function(value){
+		this._lives=value;
+		this.lab_lives.text=this._lives.toString();
+	});
+
+	__getset(0,__proto,'coffee',function(){return this._coffee;},function(value){
+		this._coffee=value;
+		if(this._coffee==0){
+			this.lab_coffee.text="+";
+			}else{
+			this.lab_coffee.text=this._coffee.toString();
+		}
+	});
+
+	/**
+	*Food items score.
+	*@return
+	*
+	*/
+	__getset(0,__proto,'foodScore',function(){return this._foodScore;},function(value){
+		this._foodScore=value;
+		this.lab_score.text=this._foodScore.toString();
+		WXUtils.instance.setChaoyue(value);
+	});
+
+	__getset(0,__proto,'mushroom',function(){return this._mushroom;},function(value){
+		this._mushroom=value;
+		if(this._mushroom==0){
+			this.lab_mushroom.text="+";
+			}else{
+			this.lab_mushroom.text=this._mushroom.toString();
+		}
+	});
+
+	return SceneView;
+})(SkillVideoUI)
 
 
 /**
@@ -43101,33 +42920,53 @@ var SettleDialogUI=(function(_super){
 //class view.GameOverDialog extends ui.GameOverUI
 var GameOverDialog=(function(_super){
 	function GameOverDialog(){
+		this.left_num=0;
 		GameOverDialog.__super.call(this);
+		this.left_num=20;
 		this.closeHandler=new Handler(this,this.onMyClosed);
+		this.img_invite.on("click",this,this.onInvite);
 	}
 
 	__class(GameOverDialog,'view.GameOverDialog',_super);
 	var __proto=GameOverDialog.prototype;
 	__proto.setMyScore=function(myscore){
 		this.myscore.text=myscore;
-		if(Browser.onMiniGame){
-			wx.setUserCloudStorage({
-				KVDataList:[{key:"score",value:myscore.toString()}],
-				success:function (res){
-					console.log("setusercloud成功",res);
-					var openDataContext=wx.getOpenDataContext();
-					openDataContext.postMessage({
-						id:'getFriendCloudStorage'
-					});
-				},
-				fail:function (res){
-					console.log("setcloud失败",res);
-				}
-			});
+	}
+
+	//WXUtils.instance.setMyScore(myscore);
+	__proto.onMyClosed=function(type){
+		if(type=="close"){
+			this.event("dialogToGame");
+			Laya.timer.clearAll(this);
 		}
 	}
 
-	__proto.onMyClosed=function(type){
-		this.event("changeScreen");
+	__proto.onInvite=function(){
+		var reliveHandler=Handler.create(this,this.relive,null,true);
+		WXUtils.instance.showShare(reliveHandler);
+	}
+
+	__proto.relive=function(){
+		this.event("dialogToGame",{id:"relive"});
+		this.close("relive");
+	}
+
+	__proto.onOpened=function(){
+		this.left_num=20;
+		Laya.timer.loop(1000,this,this.onLoop);
+	}
+
+	__proto.onLoop=function(){
+		this.lab_lefttime.text=(this.left_num--).toString();
+		if(this.left_num <=0){
+			this.event("dialogToGame");
+			this.clearAndClose();
+		}
+	}
+
+	__proto.clearAndClose=function(){
+		Laya.timer.clearAll(this);
+		this.close("other");
 	}
 
 	return GameOverDialog;
@@ -43142,9 +42981,32 @@ var GameOverDialog=(function(_super){
 var PauseDialog=(function(_super){
 	function PauseDialog(){
 		PauseDialog.__super.call(this);
+		this.img_main.on("click",this,this.onMain);
+		this.img_restart.on("click",this,this.onRestart);
+		this.img_continue.on("click",this,this.onContinue);
+		this.closeHandler=new Handler(this,this.onMyClosed);
 	}
 
 	__class(PauseDialog,'view.PauseDialog',_super);
+	var __proto=PauseDialog.prototype;
+	__proto.onMain=function(){
+		this.event("dialogToGame",{id:"main"});
+	}
+
+	__proto.onRestart=function(){
+		this.event("dialogToGame",{id:"restart"});
+	}
+
+	__proto.onContinue=function(){
+		this.event("dialogToGame",{id:"continue"});
+	}
+
+	__proto.onMyClosed=function(type){
+		if(type=="close"){
+			this.event("dialogToGame",{id:"continue"});
+		}
+	}
+
 	return PauseDialog;
 })(PauseDialogUI)
 
@@ -43167,7 +43029,9 @@ var SettleDialog=(function(_super){
 	}
 
 	__proto.onMyClosed=function(type){
-		this.event("changeScreen",{id:"playAgain"});
+		if(type=="close"){
+			this.event("dialogToGame",{id:"playAgain"});
+		}
 	}
 
 	return SettleDialog;
@@ -43176,7 +43040,7 @@ var SettleDialog=(function(_super){
 
 	Laya.__init([EventDispatcher,LoaderManager,Browser,DrawText,GraphicAnimation,Render,View,WebGLContext2D,ShaderCompile,Timer,LocalStorage,AtlasGrid]);
 	/**LayaGameStart**/
-	new LayaUISample();
+	new MiniGame();
 
 })(window,document,Laya);
 

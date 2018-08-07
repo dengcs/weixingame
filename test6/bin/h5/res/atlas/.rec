@@ -1,18 +1,20 @@
 D .
 D gameOverDialog
 R D15B172B img_again.png
-R BD2B64C8 img_bg.png
+P 7912CF20 img_bg.png
+P 1EC39756 img_bg01.png
 P 6AF07940 img_curscore.png
-R C3170369 img_invite.png
-P 2A6B54B0 img_pass.png
-P C83EA85F img_score.png
+R 5487EE4B img_invite.png
+P 976FB337 img_pass.png
+P D96405E3 img_score.png
 D mySpritesheet
-P 72B539A4 about_backButton.png
 R DDAF9644 bgLayer1.jpg
 R C77F270B bgLayer2.png
 R C7FB171F bgLayer3.png
 R C697B824 bgLayer4.png
 R 7E269716 bgWelcome.jpg
+P 47B36CE4 daojukafei_text.png
+P CFEFD0BC daojumogu_text.png
 P 6D4B6C10 fly_0001.png
 P CB4A10FC fly_0002.png
 P 051100A3 fly_0003.png
@@ -33,13 +35,10 @@ P 037CF4CF fly_0017.png
 P A70C7FD0 fly_0018.png
 P 582F2551 fly_0019.png
 P 0ED9F576 fly_0020.png
-P AE811DA0 gameOver_aboutButton.png
-P 799B4802 gameOver_mainButton.png
-P B777D05E gameOver_playAgainButton.png
-P 157AFD4A img_circle.png
-P 6395977F img_life.png
-P C2DA19D9 img_score.png
-P ED5C966A img_view_video.png
+P EEC51F99 img_circle.png
+P 0A76A4F9 img_life.png
+P 86446BD6 img_score.png
+P 2D58EDEC img_view_video.png
 P 37139383 item1.png
 P A8AFFFEB item2.png
 P F7D4E2B7 item3.png
@@ -63,21 +62,20 @@ P 3AAA5975 soundOff.png
 P 805927FE soundOn0000.png
 P 26F58985 soundOn0001.png
 P 06525742 soundOn0002.png
-P 86A8A592 startButton.png
+P 60A90D9D startButton.png
 P 1BD1B508 watchOut_0001.png
 P 14CA6D14 watchOut_0002.png
 P 4CBDC110 watchOut_0003.png
 P C2793F2F watchOut_0004.png
 P 1BD1B508 watchOut_0005.png
-P A557168F welcome_aboutButton.png
-P 8FBDD71F welcome_hero.png
-R 14F7E647 welcome_inviteButton.png
-R 698933D2 welcome_playButton.png
-P 5D74F36A welcome_rankButton.png
-R 40FE514A welcome_title.png
+P 65D1EAC1 welcome_hero.png
+P 3644B44F welcome_inviteButton.png
+P 44FDAB6A welcome_playButton.png
+P C618F71E welcome_rankButton.png
+P 9C85ABE4 welcome_title.png
 D pauseDialog
-P E93034AA btn_close.png
-R F4D29C0B img_bj.png
-P ED68ECAF img_home.png
-P 991D9A3B img_restart.png
-P 21FEE61C img_run.png
+P 375CCEF8 btn_close.png
+P 8E02D5A9 img_bj.png
+P F1EDDA0A img_home.png
+P 40346540 img_restart.png
+P B513DC0B img_run.png

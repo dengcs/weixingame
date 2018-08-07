@@ -17,26 +17,18 @@ package com.hsharma.hungryHero.screens
 	import com.hsharma.hungryHero.Button;
 	import com.hsharma.hungryHero.StarlingTextField;
 	import laya.media.SoundManager;
-	//import com.hsharma.hungryHero.Fonts;
-	//import com.hsharma.hungryHero.customObjects.Font;
 	import com.hsharma.hungryHero.events.NavigationEvent;
 	import com.hsharma.hungryHero.Sounds;
-	//import com.hsharma.hungryHero.StarlingTextField;
 	import laya.display.Animation;
 	import laya.display.Sprite;
 	import laya.events.Event;
 	import laya.ui.Image;
-	import wx;
-	import laya.utils.Browser;
 	import laya.resource.Texture;
-	import laya.webgl.shapes.Ellipse;
+	import sdk.WXUtils;
+	import com.hsharma.hungryHero.GameConstants;
+	import utils.PositionHelper;
 	
-	/**
-	 * This is the welcome or main menu class for the game.
-	 *  
-	 * @author hsharma
-	 * 
-	 */
+	
 	public class Welcome extends Sprite
 	{
 		/** Background image. */
@@ -57,28 +49,13 @@ package com.hsharma.hungryHero.screens
 		/** Back button. */
 		private var rankBtn:Button;
 		
-		/** Screen mode - "welcome" or "about". */
-		private var screenMode:String;
-
 		/** Current date. */
 		private var _currentDate:Date;
-		
-		/** Font - Regular text. */
-		//private var fontRegular:Font;
-		
-		/** Hero art tween object. */
-		private var tween_hero:Object;
-
-		private var rankSprite:Sprite;
-		private var rankTexture:Texture;
-
-		private var rankCount:uint;
 		
 		public function Welcome()
 		{
 			super();
 			this.visible = false;
-			this.rankCount = 1;
 			this.on(Event.ADDED,this, onAddedToStage);
 		}
 		
@@ -99,55 +76,39 @@ package com.hsharma.hungryHero.screens
 		 * 
 		 */
 		private function drawScreen():void
-		{
-			// GENERAL ELEMENTS
-			
+		{			
 			bg = new Image(Assets.getTexture("bgWelcome"));
-			//Assets.getTexture(bg.graphics,"BgWelcome")
-			//bg.blendMode = BlendMode.NONE;
 			this.addChild(bg);
 			
 			title =new Image(Assets.getTexture("welcome_title"))//Shape//new Bitmap(com.hsharma.hungryHero.Assets.getAtlas().getTexture(("welcome_title")));
 			title.x = 600;
-			title.y = 65;
-			title.scale(0.5, 0.5);
-			//Assets.getAtlas().getTexture(title.graphics,"welcome_title")
+			title.y = 10;
 			this.addChild(title);
 
 			rankBtn = new Button("welcome_rankButton");
-			//Assets.getAtlas().getTexture(rankBtn.graphics,"about_backButton")
 			rankBtn.x = 600;
 			rankBtn.y = 355;
-			rankBtn.scale(0.5, 0.5);
 			rankBtn.on(Event.CLICK, this, onRankClick);
 			this.addChild(rankBtn);
 			
-			// WELCOME ELEMENTS
-			
 			hero = new Image(Assets.getTexture("welcome_hero"));
-			//Assets.getAtlas().getTexture(hero.graphics,"welcome_hero")
-			hero.x = -hero.width;
-			hero.y = 130;
+			hero.x = 130;
+			hero.y = 100;
 			this.addChild(hero);
 			
 			playBtn = new Button("welcome_playButton");
-			///Assets.getAtlas().getTexture(playBtn.graphics,"welcome_playButton")
 			playBtn.x = 600;
-			playBtn.y = 535;
-			playBtn.scale(0.5, 0.5);
+			playBtn.y = Laya.stage.height - playBtn.height - 50;
 			playBtn.on(Event.CLICK, this, onPlayClick);
 			this.addChild(playBtn);
 			
 			shareBtn = new Button("welcome_inviteButton");
 			shareBtn.x = 100;
-			shareBtn.y = 535;
-			shareBtn.scale(0.5, 0.5);
+			shareBtn.y = Laya.stage.height- shareBtn.height  - 50;
 			shareBtn.on(Event.CLICK, this, onShareClick);
 			this.addChild(shareBtn);
-			
-			// ABOUT ELEMENTS
-			//fontRegular = Fonts.getFont("Regular");		
-			
+
+			hero.scale(0.6, 0.6);
 		}
 		
 		/**
@@ -157,39 +118,7 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function onRankClick(event:Event):void
 		{
-			if (!Sounds.muted) {
-				Sounds.playSound(Sounds.sndCoffee)//.play();
-			}
-			
-			//initialize();
-			if(Browser.onMiniGame){
-				rankSprite = new Sprite();
-				var openDataContext = wx.getOpenDataContext();
-				var sharedCanvas = openDataContext.canvas;
-				
-				rankTexture=new Texture(sharedCanvas);
-				rankTexture.bitmap.alwaysChange=true;
-				this.addChild(rankSprite);		
-
-				var rx = (Laya.stage.width - rankTexture.width)/2;
-				var ry = (Laya.stage.height - rankTexture.height)/2;
-
-				rankSprite.graphics.clear();				
-
-				if((this.rankCount%2) == 1)
-				{
-					rankSprite.graphics.drawTexture(rankTexture, rx, ry, rankTexture.width, rankTexture.height);
-					openDataContext.postMessage({
-							id: 'showRank'
-					});
-				}else
-				{
-					openDataContext.postMessage({
-							id: 'hideRank'
-					});
-				}
-				this.rankCount += 1;
-			}
+			if (!Sounds.muted) Sounds.playSound(Sounds.sndMushroom);
 		}
 		
 		/**
@@ -200,9 +129,8 @@ package com.hsharma.hungryHero.screens
 		private function onPlayClick(event:Event):void
 		{
 			trace("play");
-			this.event(NavigationEvent.CHANGE_SCREEN, {id: "play"});
-			
-			if (!Sounds.muted) Sounds.playSound(Sounds.sndCoffee)//.play();
+			if (!Sounds.muted) Sounds.playSound(Sounds.sndCoffee);
+			this.event(NavigationEvent.CHANGE_SCREEN);			
 		}
 		
 		/**
@@ -212,34 +140,10 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function onShareClick(event:Event):void
 		{
-			if (!Sounds.muted) Sounds.playSound(Sounds.sndMushroom)//.play();
-			showShare();
+			if (!Sounds.muted) Sounds.playSound(Sounds.sndMushroom);
+			WXUtils.instance.showShare(null);
 		}
-		
-		/**
-		 * Show about screen. 
-		 * 
-		 */
-		public function showShare():void
-		{
-			// screenMode = "about";
-			
-			// hero.visible = false;
-			// playBtn.visible = false;
-			// shareBtn.visible = false;
-			
-			// rankBtn.visible = true;
-			
-			if(Browser.onMiniGame)
-			{
-				wx.shareAppMessage({
-					title: "饿了么英雄",
-					imageUrl: "http://www.hungryherogame.com/images/promo.jpg",
-					query: ""
-				});
-			}
-		}
-		
+				
 		/**
 		 * Initialize welcome screen. 
 		 * 
@@ -247,31 +151,10 @@ package com.hsharma.hungryHero.screens
 		public function initialize():void
 		{
 			disposeTemporarily();
+
+			if (!Sounds.muted) Sounds.playMusic(Sounds.sndBgMain);
 			
-			this.visible = true;
-			
-			// If not coming from about, restart playing background music.
-			if (screenMode != "about")
-			{
-				if (!Sounds.muted) Sounds.playMusic(Sounds.sndBgMain)//.play(0, 999);
-			}
-			
-			screenMode = "welcome";
-			
-			hero.visible = true;
-			playBtn.visible = true;
-			shareBtn.visible = true;
-			
-			rankBtn.visible = true;
-			
-			hero.x = -hero.width;
-			hero.y = 100;
-			
-			//tween_hero = new Tween(hero, 4, Transitions.EASE_OUT);
-			//tween_hero.animate("x", 80);
-			//Starling.juggler.add(tween_hero);
-			hero.x = 80;
-			
+			this.visible = true;			
 			
 			Laya.timer.frameLoop(1,this, floatingAnimation);
 		}
@@ -284,10 +167,12 @@ package com.hsharma.hungryHero.screens
 		private function floatingAnimation(event:Event):void
 		{
 			_currentDate = new Date();
-			hero.y = 130 + (Math.cos(_currentDate.getTime() * 0.002)) * 25;
-			rankBtn.y = 355 + (Math.cos(_currentDate.getTime() * 0.002)) * 10;
-			playBtn.y = 535 + (Math.cos(_currentDate.getTime() * 0.002)) * 10;
-			shareBtn.y = 535 + (Math.cos(_currentDate.getTime() * 0.002)) * 10;
+			
+			hero.y = (Laya.stage.height - hero.height)/2 + 20;
+			hero.y = hero.y + (Math.cos(_currentDate.getTime() * 0.002)) * 10;
+			
+			rankBtn.y = (Laya.stage.height - rankBtn.height)/2 + 20;
+			rankBtn.y = rankBtn.y + (Math.cos(_currentDate.getTime() * 0.002)) * 10;
 		}
 		
 		/**
@@ -298,11 +183,7 @@ package com.hsharma.hungryHero.screens
 		{
 			this.visible = false;
 			Laya.timer.clear(this, floatingAnimation);
-			//if (this.hasListener(Event.FRAME)) this.off(Event.FRAME,this, floatingAnimation);
-			
-			if (screenMode != "about") {
-				SoundManager.stopAll();
-			}
+			SoundManager.stopAll();
 		}
 	}
 }

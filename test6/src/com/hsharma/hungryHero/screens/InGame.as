@@ -15,7 +15,6 @@ package com.hsharma.hungryHero.screens
 {
 	import com.hsharma.hungryHero.Assets;
 	import com.hsharma.hungryHero.Button;
-	import com.hsharma.hungryHero.GameConstants;
 	import com.hsharma.hungryHero.events.NavigationEvent;
 	import com.hsharma.hungryHero.gameElements.GameBackground;
 	import com.hsharma.hungryHero.gameElements.Hero;
@@ -28,16 +27,16 @@ package com.hsharma.hungryHero.screens
 	import com.hsharma.hungryHero.ParticleAssets;
 	import com.hsharma.hungryHero.PDParticleSystem;
 	import com.hsharma.hungryHero.Sounds;
-	import com.hsharma.hungryHero.ui.GameOverContainer;
-	import com.hsharma.hungryHero.ui.HUD;
-	import com.hsharma.hungryHero.ui.PauseButton;
+	import com.hsharma.hungryHero.GameConstants;
 	import laya.display.Sprite;
 	import laya.events.Event;
 	import laya.maths.Rectangle;
 	import laya.media.SoundManager;
+	import laya.utils.Browser;
 	import view.PauseDialog;
 	import view.GameOverDialog;
 	import view.SettleDialog;
+	import view.SceneView;
 	
 	
 	/**
@@ -76,7 +75,7 @@ package com.hsharma.hungryHero.screens
 		private var isHardwareRendering:Boolean;
 		
 		/** Is game currently in paused state? */
-		private var gamePaused:Boolean = false;
+		private var gamePaused:Boolean = true;
 		
 		/** Items pool with a maximum cap for reuse of items. */		
 		private var itemsPool:PoolItem;
@@ -219,25 +218,9 @@ package com.hsharma.hungryHero.screens
 		// HUD
 		// ------------------------------------------------------------------------------------------------------------
 		
-		/** HUD Container. */		
-		private var hud:HUD;
-		
-		// ------------------------------------------------------------------------------------------------------------
-		// INTERFACE OBJECTS
-		// ------------------------------------------------------------------------------------------------------------
-		
-		/** GameOver Container. */
-		//private var gameOverContainer:GameOverContainer;
-		
-		/** Pause button. */
-		private var pauseButton:PauseButton;
-		
-		/** Kick Off button in the beginning of the game .*/
-		private var startButton:Button;
-		
-		/** Tween object for game over container. */
-		//private var tween_gameOverContainer:Object;
-
+		/** HUD Container. */
+		private var hud:SceneView;
+				
 		private var pauseDialog:PauseDialog;
 
 		private var gameOverDialog:GameOverDialog;
@@ -250,11 +233,7 @@ package com.hsharma.hungryHero.screens
 
 		public function InGame()
 		{
-			super();
-			
-			// Is hardware rendering?
-			//isHardwareRendering = Starling.context.driverInfo.toLowerCase().indexOf("software") == -1;
-			
+			super();			
 			
 			this.visible = false;
 			on(Event.ADDED,this, onAddedToStage);
@@ -272,7 +251,7 @@ package com.hsharma.hungryHero.screens
 			drawGame();
 			drawHUD();
 			drawGameOverScreen();
-		}
+		}		
 		
 		/**
 		 * Draw game elements - background, hero, particles, pause button, start button and items (in pool). 
@@ -282,43 +261,11 @@ package com.hsharma.hungryHero.screens
 		{
 			// Draw background.
 			bg = new GameBackground();
-			this.addChild(bg);
-			
-			// Is hardware rendering, draw particles.
-			if (isHardwareRendering)
-			{
-				particleCoffee = new PDParticleSystem(null,null)//Assets.assets["particles/particleCoffee.json"],Assets.assets["particles/texture.png"]);
-				//(JSON.parse((new com.hsharma.hungryHero.ParticleAssets.ParticleCoffeeXML())+""), new com.hsharma.hungryHero.ParticleAssets.ParticleTexture());
-				//Starling.juggler.add(particleCoffee);
-				
-				particleMushroom = new PDParticleSystem(null,null)//Assets.assets["particles/particleMushroom.json"],Assets.assets["particles/texture.png"]);
-				//(JSON.parse((new com.hsharma.hungryHero.ParticleAssets.ParticleMushroomXML())+""), new com.hsharma.hungryHero.ParticleAssets.ParticleTexture());
-				//Starling.juggler.add(particleMushroom);
-				
-				this.addChild(particleCoffee);
-				this.addChild(particleMushroom);
-			}
+			this.addChild(bg);			
 			
 			// Draw hero.
 			hero = new Hero();
 			this.addChild(hero);
-			
-			// Pause button.
-			pauseButton = new PauseButton();
-			pauseButton.x = pauseButton.width * 2;
-			pauseButton.y = pauseButton.height * 0.5;
-			pauseButton.on(Event.CLICK, this,onPauseButtonClick);
-			this.addChild(pauseButton);
-			
-			// Start button.
-			startButton = new Button("startButton");
-			startButton.fontColor = 0xffffff;
-			startButton.scale(0.5, 0.5);
-			startButton.x = GameConstants.stageWidth/2 - startButton.width/4;
-			startButton.y = GameConstants.stageHeight/2 - startButton.height/4;
-
-			startButton.on(Event.CLICK,this, onStartButtonClick);
-			this.addChild(startButton);
 			
 			// Initialize items-to-animate vector.
 			itemsToAnimate = [];//new Vector.<Item>();
@@ -353,7 +300,7 @@ package com.hsharma.hungryHero.screens
 		 * @param event
 		 * 
 		 */
-		private function onPauseButtonClick(event:Event):void
+		private function onPause():void
 		{
 			//event.stopImmediatePropagation();
 			
@@ -379,10 +326,12 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function drawHUD():void
 		{
-			hud = new HUD();
+			hud = new SceneView();
 			this.addChild(hud);
+			hud.on(NavigationEvent.DIALOG_TO_GAME, this, onHudEvent)
 
 			pauseDialog = new PauseDialog();
+			pauseDialog.on(NavigationEvent.DIALOG_TO_GAME, this, onPauseEvent);
 		}
 		
 		/**
@@ -391,41 +340,96 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function drawGameOverScreen():void
 		{
-			// gameOverContainer = new GameOverContainer();
-			// gameOverContainer.on(NavigationEvent.CHANGE_SCREEN,this, playAgain);
-			// this.addChild(gameOverContainer);
-
 			gameOverDialog = new GameOverDialog();
-			gameOverDialog.on(NavigationEvent.CHANGE_SCREEN, this, onMySettle);
+			gameOverDialog.on(NavigationEvent.DIALOG_TO_GAME, this, onGameOverEvent);
 
 
 			settleDialog = new SettleDialog();
-			settleDialog.on(NavigationEvent.CHANGE_SCREEN, this, playAgain);
+			settleDialog.on(NavigationEvent.DIALOG_TO_GAME, this, onSettleEvent);
 		}
 
-		private function onMySettle():void
+		public function closeAllDialog():void
 		{
-			settleDialog.show();
-			settleDialog.setMyScore(scoreItems.toString());
+			if(pauseDialog != null)
+			{
+				pauseDialog.close();
+			}
+
+			if(gameOverDialog != null)
+			{
+				gameOverDialog.clearAndClose();
+			}
+
+			if(settleDialog != null)
+			{
+				settleDialog.close();
+			}
+		}
+
+		private function onGameOverEvent(obj:Object):void
+		{
+			if(obj != null && obj.id == "relive")
+			{
+				var tmpScore:int = this.scoreItems;
+				this.initialize();
+				this.scoreItems = tmpScore;
+				hud.foodScore = tmpScore;
+			}else{
+				settleDialog.show();
+				settleDialog.setMyScore(scoreItems.toString());
+			}
 		}
 		
 		/**
 		 * Play again, when clicked on play again button in Game Over screen. 
 		 * 
 		 */
-		private function playAgain(obj:Object):void
+		private function onSettleEvent(obj:Object):void
 		{
 			if (obj.id == "playAgain") 
 			{
-				//gameOverContainer.alpha = 0;
-				//tween_gameOverContainer = new Tween(gameOverContainer, 1);
-				//tween_gameOverContainer.fadeTo(0);
-				//tween_gameOverContainer.onComplete = gameOverFadedOut;
-				//Starling.juggler.add(tween_gameOverContainer);
 				gameOverFadedOut();
 			}
+		}
+
+		private function onPauseEvent(obj:Object):void
+		{
+			var bClearOverDialog:Boolean = false;
+			if (obj.id == "main") 
+			{
+				this.event(NavigationEvent.CHANGE_SCREEN);
+				bClearOverDialog = true;
+			}
+			else if(obj.id == "restart")
+			{
+				this.initialize();
+				bClearOverDialog = true;
+			}
+			else
+			{
+			 	gamePaused = false;				
+				bg.gamePaused = gamePaused;				
+			}
+			pauseDialog.close();
 			
-			event(NavigationEvent.CHANGE_SCREEN, obj);
+			if(bClearOverDialog && gameOverDialog != null)
+			{
+				gameOverDialog.clearAndClose();
+			}
+		}
+
+		private function onHudEvent(obj:Object):void
+		{
+			if(obj.id == "coffee")
+			{
+				coffee = 5;
+			}else if(obj.id == "mushroom")
+			{
+				mushroom = 4;
+			}else if(obj.id == "pause")
+			{
+				onPause();
+			}
 		}
 		
 		/**
@@ -513,7 +517,7 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function eatParticleCreate():Particle
 		{
-			var eatParticle:Particle = new Particle(com.hsharma.hungryHero.GameConstants.PARTICLE_TYPE_1);
+			var eatParticle:Particle = new Particle(GameConstants.PARTICLE_TYPE_1);
 			eatParticle.x = GameConstants.stageWidth + eatParticle.width * 2;
 			this.addChild(eatParticle);
 			return eatParticle;
@@ -547,7 +551,7 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function windParticleCreate():Particle
 		{
-			var windParticle:Particle = new Particle(com.hsharma.hungryHero.GameConstants.PARTICLE_TYPE_2);
+			var windParticle:Particle = new Particle(GameConstants.PARTICLE_TYPE_2);
 			windParticle.x = GameConstants.stageWidth + windParticle.width * 2;
 			this.addChild(windParticle);
 			return windParticle;
@@ -576,16 +580,16 @@ package com.hsharma.hungryHero.screens
 			this.visible = true;
 			
 			// Calculate elapsed time.
-			Laya.timer.frameLoop(1,this, calculateElapsed);
+			Laya.timer.frameLoop(1, this, calculateElapsed);
 			
 			// Play screen background music.
-			if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playMusic(Sounds.sndBgGame)//.play(0, 999);
+			if (!Sounds.muted) Sounds.playMusic(Sounds.sndBgGame);
 			
 			// Define game area.
-			gameArea = new Rectangle(0, 100, GameConstants.stageWidth, GameConstants.stageHeight - 250);
+			gameArea = new Rectangle(0, 100, GameConstants.stageWidth, GameConstants.stageWidth/Laya.stage.width*Laya.stage.height*.7/*GameConstants.stageHeight*/ /*- 250*/);
 			
 			// Define lives.
-			lives = com.hsharma.hungryHero.GameConstants.HERO_LIVES;
+			lives = GameConstants.HERO_LIVES;
 			
 			// Reset hit, camera shake and player speed.
 			hitObstacle = 0;
@@ -612,79 +616,45 @@ package com.hsharma.hungryHero.screens
 			mushroom = 0;
 			
 			// Reset game state to idle.
-			gameState = com.hsharma.hungryHero.GameConstants.GAME_STATE_IDLE;
+			gameState = GameConstants.GAME_STATE_IDLE;
 			
 			// Hero's initial position
 			hero.x = -GameConstants.stageWidth;
 			hero.y = GameConstants.stageHeight/2;
 			
 			// Reset hero's state to idle.
-			hero.state = com.hsharma.hungryHero.GameConstants.HERO_STATE_IDLE;
+			hero.state = GameConstants.HERO_STATE_IDLE;
 			
 			// Reset touch interaction values to hero's position.
 			touchX = hero.x;
 			touchY = hero.y;
 			
-			// Reset hud values and text fields.
-			hud.foodScore = 0;
-			//hud.distance = 0;
-			hud.lives = lives;
-			
-			// Reset background's state to idle.
-			bg.state = com.hsharma.hungryHero.GameConstants.GAME_STATE_IDLE;
+			hud.init();
 			
 			// Reset game paused states.
 			gamePaused = false;
 			bg.gamePaused = false;
 			
 			// Reset background's state to idle.
-			bg.state = com.hsharma.hungryHero.GameConstants.GAME_STATE_IDLE;
+			bg.state = GameConstants.GAME_STATE_IDLE;
 			
 			// Reset background speed.
 			bg.speed = 0;
 			
-			// Hide the pause button since the game isn't started yet.
-			pauseButton.visible = false;
-			
-			// Show start button.
-			startButton.visible = true;
+			// Launch hero.
+			launchHero();
 		}
 		
 		/**
 		 * Dispose screen temporarily. 
 		 * 
 		 */
-		private function disposeTemporarily():void
+		public function disposeTemporarily():void
 		{
 			SoundManager.stopAll();
-			
-			//gameOverContainer.visible = false;
-			
-			Laya.timer.clear(this, calculateElapsed);
-			
-			//if (this.hasEventListener(TouchEvent.TOUCH)) this.removeEventListener(TouchEvent.TOUCH, onTouch);
-			Laya.timer.clear(this, onGameTick);
-		}
-		
-		/**
-		 * On start button click. 
-		 * @param event
-		 * 
-		 */
-		private function onStartButtonClick(event:Event):void
-		{
-			// Play coffee sound for button click.
-			if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playSound(Sounds.sndCoffee)//.play();
-			
-			// Hide start button.
-			startButton.visible = false;
-			
-			// Show pause button since the game is started.
-			pauseButton.visible = true;
-			
-			// Launch hero.
-			launchHero();
-		}
+			this.closeAllDialog();
+			Laya.timer.clearAll(this);
+		}		
 		
 		/**
 		 * Launch hero. 
@@ -744,20 +714,20 @@ package com.hsharma.hungryHero.screens
 				switch(gameState)
 				{
 					// Before game starts.
-					case  com.hsharma.hungryHero.GameConstants.GAME_STATE_IDLE:
+					case  GameConstants.GAME_STATE_IDLE:
 						// Take off.
 						if (hero.x < GameConstants.stageWidth * 0.5 * 0.5)
 						{
 							hero.x += ((GameConstants.stageWidth * 0.5 * 0.5 + 10) - hero.x) * 0.05;
 							hero.y -= (hero.y - touchY) * 0.1;
 							
-							playerSpeed += (com.hsharma.hungryHero.GameConstants.HERO_MIN_SPEED - playerSpeed) * 0.05;
+							playerSpeed += (GameConstants.HERO_MIN_SPEED - playerSpeed) * 0.05;
 							bg.speed = playerSpeed * elapsed;
 						}
 						else
 						{
-							gameState = com.hsharma.hungryHero.GameConstants.GAME_STATE_FLYING;
-							hero.state = com.hsharma.hungryHero.GameConstants.HERO_STATE_FLYING;
+							gameState = GameConstants.GAME_STATE_FLYING;
+							hero.state = GameConstants.HERO_STATE_FLYING;
 						}
 						
 						// Rotate hero based on mouse position.
@@ -781,12 +751,12 @@ package com.hsharma.hungryHero.screens
 						break;
 					
 					// When game is in progress.
-					case com.hsharma.hungryHero.GameConstants.GAME_STATE_FLYING:
+					case GameConstants.GAME_STATE_FLYING:
 						
 						// If drank coffee, fly faster for a while.
 						if (coffee > 0)
 						{
-							playerSpeed += (com.hsharma.hungryHero.GameConstants.HERO_MAX_SPEED - playerSpeed) * 0.2;
+							playerSpeed += (GameConstants.HERO_MAX_SPEED - playerSpeed) * 0.2;
 						}
 						
 						// If not hit by obstacle, fly normally.
@@ -795,7 +765,7 @@ package com.hsharma.hungryHero.screens
 							hero.y -= (hero.y - touchY) * 0.1;
 							
 							// If hero is flying extremely fast, create a wind effect and show force field around hero.
-							if (playerSpeed > com.hsharma.hungryHero.GameConstants.HERO_MIN_SPEED + 100)
+							if (playerSpeed > GameConstants.HERO_MIN_SPEED + 100)
 							{
 								createWindForce();
 								// Animate hero faster.
@@ -833,9 +803,9 @@ package com.hsharma.hungryHero.screens
 							if (coffee <= 0)
 							{
 								// Play hero animation for obstacle hit.
-								if (hero.state != com.hsharma.hungryHero.GameConstants.HERO_STATE_HIT)
+								if (hero.state != GameConstants.HERO_STATE_HIT)
 								{
-									hero.state = com.hsharma.hungryHero.GameConstants.HERO_STATE_HIT;
+									hero.state = GameConstants.HERO_STATE_HIT;
 								}
 								
 								// Move hero to center of the screen.
@@ -860,7 +830,7 @@ package com.hsharma.hungryHero.screens
 						// If we have a coffee, reduce the value of the power.
 						if (coffee > 0) coffee -= elapsed;
 						
-						playerSpeed -= (playerSpeed - com.hsharma.hungryHero.GameConstants.HERO_MIN_SPEED) * 0.01;
+						playerSpeed -= (playerSpeed - GameConstants.HERO_MIN_SPEED) * 0.01;
 						
 						// Create food items.
 						setFoodItemsPattern();
@@ -884,12 +854,12 @@ package com.hsharma.hungryHero.screens
 						
 						// Calculate maximum distance travelled.
 						scoreDistance += (playerSpeed * elapsed) * 0.1;
-						hud.distance = Math.round(scoreDistance);
+						//hud.distance = Math.round(scoreDistance);
 						
 						break;
 					
 					// Game over.
-					case com.hsharma.hungryHero.GameConstants.GAME_STATE_OVER:
+					case GameConstants.GAME_STATE_OVER:
 						
 						for(var i:uint = 0; i < itemsToAnimateLength; i++)
 						{
@@ -1108,7 +1078,7 @@ package com.hsharma.hungryHero.screens
 					patternPosYstart = patternPosY; 
 					
 					// Create a line based on the height of patternLength, but not exceeding the height of the screen.
-					while (patternPosYstart + patternStep < patternPosY + patternLength && patternPosYstart + patternStep < GameConstants.stageHeight * 0.8)
+					while (patternPosYstart + patternStep < patternPosY + patternLength && patternPosYstart + patternStep < gameArea.height)
 					{
 						// Checkout item from pool and set the type of item.
 						itemToTrack = itemsPool.checkOut();
@@ -1245,7 +1215,7 @@ package com.hsharma.hungryHero.screens
 				if (itemToTrack != null)
 				{
 					// If hero has eaten a mushroom, make all the items move towards him.
-					if (mushroom > 0 && itemToTrack.foodItemType <= com.hsharma.hungryHero.GameConstants.ITEM_TYPE_5)
+					if (mushroom > 0 && itemToTrack.foodItemType <= GameConstants.ITEM_TYPE_5)
 					{
 						// Move the item towards the player.
 						itemToTrack.x -= (itemToTrack.x - heroX) * 0.2;
@@ -1260,7 +1230,7 @@ package com.hsharma.hungryHero.screens
 					
 					// If the item passes outside the screen on the left, remove it (check-in).
 					
-					if (itemToTrack.x < -80 || gameState == com.hsharma.hungryHero.GameConstants.GAME_STATE_OVER)
+					if (itemToTrack.x < -80 || gameState == GameConstants.GAME_STATE_OVER)
 					{
 						disposeItemTemporarily(i, itemToTrack);
 					}
@@ -1274,13 +1244,13 @@ package com.hsharma.hungryHero.screens
 						if (heroItem_sqDist < 5000)
 						{
 							// If hero eats an item, add up the score.
-							if (itemToTrack.foodItemType <= com.hsharma.hungryHero.GameConstants.ITEM_TYPE_5)
+							if (itemToTrack.foodItemType <= GameConstants.ITEM_TYPE_5)
 							{
 								scoreItems += itemToTrack.foodItemType;
 								hud.foodScore = scoreItems;
-								if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playSound(Sounds.sndEat)//.play();
+								if (!Sounds.muted) Sounds.playSound(Sounds.sndEat);
 							}
-							else if (itemToTrack.foodItemType == com.hsharma.hungryHero.GameConstants.ITEM_TYPE_COFFEE) 
+							else if (itemToTrack.foodItemType == GameConstants.ITEM_TYPE_COFFEE) 
 							{
 								// If hero drinks coffee, add up the score.
 								scoreItems += 1;
@@ -1289,9 +1259,9 @@ package com.hsharma.hungryHero.screens
 								coffee = 5;
 								//if (isHardwareRendering) particleCoffee.start(coffee);
 								
-								if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playSound(Sounds.sndCoffee)//.play();
+								if (!Sounds.muted) Sounds.playSound(Sounds.sndCoffee);
 							}
-							else if (itemToTrack.foodItemType == com.hsharma.hungryHero.GameConstants.ITEM_TYPE_MUSHROOM) 
+							else if (itemToTrack.foodItemType == GameConstants.ITEM_TYPE_MUSHROOM) 
 							{
 								// If hero eats a mushroom, add up the score.
 								scoreItems += 1;
@@ -1300,7 +1270,7 @@ package com.hsharma.hungryHero.screens
 								mushroom = 4;
 								//if (isHardwareRendering) particleMushroom.start(mushroom);
 								
-								if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playSound(Sounds.sndMushroom)//.play();
+								if (!Sounds.muted) Sounds.playSound(Sounds.sndMushroom);
 							}
 							
 							// Create an eat particle at the position of the food item that was eaten.
@@ -1376,7 +1346,7 @@ package com.hsharma.hungryHero.screens
 		private function initObstacle():void
 		{
 			// Create an obstacle after hero travels some distance (obstacleGap).
-			if (obstacleGapCount < com.hsharma.hungryHero.GameConstants.OBSTACLE_GAP)
+			if (obstacleGapCount < GameConstants.OBSTACLE_GAP)
 			{
 				obstacleGapCount += playerSpeed * elapsed;
 			}
@@ -1404,7 +1374,7 @@ package com.hsharma.hungryHero.screens
 			obstacle.x = GameConstants.stageWidth;
 			
 			// For only one of the obstacles, make it appear in either the top or bottom of the screen.
-			if (_type <= com.hsharma.hungryHero.GameConstants.OBSTACLE_TYPE_3)
+			if (_type <= GameConstants.OBSTACLE_TYPE_3)
 			{
 				// Place it on the top of the screen.
 				if (Math.random() > 0.5)
@@ -1427,7 +1397,7 @@ package com.hsharma.hungryHero.screens
 			}
 			
 			// Set the obstacle's speed.
-			obstacle.speed = com.hsharma.hungryHero.GameConstants.OBSTACLE_SPEED;
+			obstacle.speed = GameConstants.OBSTACLE_SPEED;
 			
 			// Set look out mode to true, during which, a look out text appears.
 			obstacle.lookOut = true;
@@ -1472,7 +1442,7 @@ package com.hsharma.hungryHero.screens
 					}
 					
 					// If the obstacle passes beyond the screen, remove it.
-					if (obstacleToTrack.x < -obstacleToTrack.width || gameState == com.hsharma.hungryHero.GameConstants.GAME_STATE_OVER)
+					if (obstacleToTrack.x < -obstacleToTrack.width || gameState == GameConstants.GAME_STATE_OVER)
 					{
 						disposeObstacleTemporarily(i, obstacleToTrack);
 					}
@@ -1486,7 +1456,7 @@ package com.hsharma.hungryHero.screens
 					{
 						obstacleToTrack.alreadyHit = true;
 						
-						if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playSound(Sounds.sndHit)//.play();
+						if (!Sounds.muted) Sounds.playSound(Sounds.sndHit);
 						
 						if (coffee > 0) 
 						{
@@ -1512,7 +1482,7 @@ package com.hsharma.hungryHero.screens
 							playerSpeed *= 0.5; 
 							
 							// Play hurt sound.
-							if (!com.hsharma.hungryHero.Sounds.muted) com.hsharma.hungryHero.Sounds.playSound(Sounds.sndHurt)//.play();
+							if (!Sounds.muted) Sounds.playSound(Sounds.sndHurt);
 							
 							// Update lives.
 							lives--;
@@ -1528,7 +1498,7 @@ package com.hsharma.hungryHero.screens
 					}
 					
 					// If the game has ended, remove the obstacle.
-					if (gameState == com.hsharma.hungryHero.GameConstants.GAME_STATE_OVER)
+					if (gameState == GameConstants.GAME_STATE_OVER)
 					{
 						disposeObstacleTemporarily(i, obstacleToTrack);
 					}
@@ -1546,7 +1516,7 @@ package com.hsharma.hungryHero.screens
 			this.y = 0;
 			
 			// Set Game Over state so all obstacles and items can remove themselves.
-			gameState = com.hsharma.hungryHero.GameConstants.GAME_STATE_OVER;
+			gameState = GameConstants.GAME_STATE_OVER;
 		}
 		
 		/**
@@ -1555,12 +1525,6 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function gameOver():void
 		{
-			// this.setChildIndex(gameOverContainer, this.numChildren-1);
-			// gameOverContainer.initialize(scoreItems, Math.round(scoreDistance));
-			//tween_gameOverContainer = new Tween(gameOverContainer, 1);
-			//tween_gameOverContainer.fadeTo(1);
-			//gameOverContainer.alpha = 1;
-			//Starling.juggler.add(tween_gameOverContainer);
 			gameOverDialog.show();
 			gameOverDialog.setMyScore(scoreItems.toString());
 		}
@@ -1643,7 +1607,7 @@ package com.hsharma.hungryHero.screens
 					windToTrack.x -= 100 * windToTrack.scaleX; 
 					
 					// If the wind particle goes off screen, remove it.
-					if (windToTrack.x < -windToTrack.width || gameState == com.hsharma.hungryHero.GameConstants.GAME_STATE_OVER)
+					if (windToTrack.x < -windToTrack.width || gameState == GameConstants.GAME_STATE_OVER)
 					{
 						disposeWindParticleTemporarily(i, windToTrack);
 					}
@@ -1698,7 +1662,6 @@ package com.hsharma.hungryHero.screens
 		 */
 		private function gameOverFadedOut():void
 		{
-			//gameOverContainer.visible = false;
 			initialize();
 		}
 		
@@ -1710,7 +1673,12 @@ package com.hsharma.hungryHero.screens
 		private function calculateElapsed(event:Event):void
 		{
 			// Set the current time as the previous time.
-			timePrevious = timeCurrent;
+			if(isNaN(timeCurrent))
+			{
+				timePrevious = (new Date()).getTime();
+			}else{
+				timePrevious = timeCurrent;		
+			}
 			
 			// Get teh new current time.
 			timeCurrent = (new Date()).getTime();

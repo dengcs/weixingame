@@ -24,6 +24,8 @@ package com.hsharma.hungryHero.events
 	{
 		/** Change of a screen. */		
 		public static const CHANGE_SCREEN:String = "changeScreen";
+
+		public static const DIALOG_TO_GAME:String = "dialogToGame";
 		
 		/** Custom object to pass parameters to the screens. */
 		public var params:Object;

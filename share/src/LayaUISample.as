@@ -1,4 +1,5 @@
 ﻿package {
+	import laya.display.Stage;
 	import laya.net.Loader;
 	import laya.net.ResourceVersion;
 	import laya.ui.Label;
@@ -16,8 +17,17 @@
 			MiniAdpter.init(false,true);
 
 			//初始化引擎
-			Laya.init(600, 600);
+			Laya.init(1024, 1024*3/4);
 			
+			Laya.stage.alignH = Stage.ALIGN_CENTER;
+			Laya.stage.alignV = Stage.ALIGN_TOP;
+			Laya.stage.scaleMode = Stage.SCALE_FIXED_WIDTH;
+			Laya.stage.screenMode = Stage.SCREEN_HORIZONTAL;
+			
+			//Laya.stage.alignH = Stage.ALIGN_LEFT//Stage.ALIGN_CENTER;
+			//Laya.stage.alignV = Stage.ALIGN_TOP;
+			//Laya.stage.scaleMode = Stage.SCALE_NOSCALE//Stage.SCALE_FIXED_WIDTH;
+			//Laya.stage.screenMode = Stage.SCREEN_NONE//Stage.SCREEN_HORIZONTAL;
 			//激活资源版本控制
             //ResourceVersion.enable("version.json", Handler.create(this, beginLoad), ResourceVersion.FILENAME_VERSION);
 			beginLoad();

@@ -1,9 +1,9 @@
 {
     "x":0,
     "type":"Dialog",
-    "selectedBox":2,
-    "selecteID":6,
-    "props":{"width":759,"sceneColor":"#000000","height":452},
+    "selectedBox":1,
+    "selecteID":2,
+    "props":{"width":1024,"sceneColor":"#ffffff","height":576},
     "nodeParent":-1,
     "label":"Dialog",
     "isOpen":true,
@@ -15,7 +15,7 @@
         {
             "x":15,
             "type":"Image",
-            "props":{"y":0,"x":0,"skin":"pauseDialog/img_bj.png"},
+            "props":{"y":141,"x":275,"width":474,"skin":"pauseDialog/img_bj.png","height":282},
             "nodeParent":1,
             "label":"Image",
             "isOpen":true,
@@ -27,9 +27,9 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":137,"x":39,"skin":"pauseDialog/img_home.png"},
+                    "props":{"y":105,"x":47,"width":97,"var":"img_main","skin":"pauseDialog/img_home.png","mouseEnabled":true,"height":123},
                     "nodeParent":2,
-                    "label":"Image",
+                    "label":"Image(img_main)",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
@@ -40,9 +40,10 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":133,"x":291,"skin":"pauseDialog/img_restart.png"},
+                    "props":{"y":105,"x":197,"width":98,"var":"img_restart","skin":"pauseDialog/img_restart.png","mouseEnabled":true,"height":123},
                     "nodeParent":2,
-                    "label":"Image",
+                    "label":"Image(img_restart)",
+                    "isOpen":true,
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
@@ -53,9 +54,9 @@
                 {
                     "x":30,
                     "type":"Image",
-                    "props":{"y":136,"x":538,"skin":"pauseDialog/img_run.png"},
+                    "props":{"y":108,"x":343,"width":90,"var":"img_continue","skin":"pauseDialog/img_run.png","height":122},
                     "nodeParent":2,
-                    "label":"Image",
+                    "label":"Image(img_continue)",
                     "isDirectory":false,
                     "isAniNode":true,
                     "hasChild":false,
@@ -66,7 +67,7 @@
                 {
                     "x":30,
                     "type":"Button",
-                    "props":{"y":-22,"x":700,"stateNum":"1","skin":"pauseDialog/btn_close.png","name":"close"},
+                    "props":{"y":-14,"x":440,"width":43,"stateNum":"1","skin":"pauseDialog/btn_close.png","name":"close","height":44},
                     "nodeParent":2,
                     "label":"Button(close)",
                     "isDirectory":false,
@@ -75,7 +76,9 @@
                     "compId":6,
                     "child":[
                         ]
-                }]
+                }],
+            "$LOCKED":false,
+            "$HIDDEN":false
         }],
     "animations":[
         {

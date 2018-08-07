@@ -1,13 +1,18 @@
 package view
 {
+	import laya.events.Event;
+	import laya.resource.Texture;
+	import laya.utils.Browser;
 	import ui.SettleDialogUI;	
 	import laya.utils.Handler;
 	import com.hsharma.hungryHero.events.NavigationEvent;
+	import wx;
 	/**
 	 * ...
 	 * @dengcs
 	 */
 	public class SettleDialog extends SettleDialogUI{
+		
 		public function SettleDialog(){
 			this.closeHandler = new Handler(this, onMyClosed);
 		}
@@ -18,7 +23,10 @@ package view
 		}
 
 		public function onMyClosed(type:String):void {
-			this.event(NavigationEvent.CHANGE_SCREEN, {id: "playAgain"});
+			if(type == "close")
+			{
+				this.event(NavigationEvent.DIALOG_TO_GAME, {id: "playAgain"});
+			}
 		}
 	}
 

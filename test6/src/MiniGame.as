@@ -3,7 +3,6 @@
 	import com.hsharma.hungryHero.HungryHero1;
 	import com.hsharma.hungryHero.StarlingTextField;
 	import com.hsharma.hungryHero.gameElements.BgLayer;
-	import com.hsharma.hungryHero.ui.HUD;
 	import laya.display.Animation;
 	import laya.display.Sprite;
 	import laya.display.Stage;
@@ -19,8 +18,8 @@
 	import laya.wx.mini.MiniAdpter;
 	import wx;
 	
-	public class LayaUISample {		
-		public function LayaUISample() {
+	public class MiniGame {		
+		public function MiniGame() {
 			//初始化微信小游戏
 			MiniAdpter.init(false);
 
@@ -28,8 +27,8 @@
 			Laya.init(GameConstants.stageWidth, GameConstants.stageHeight,WebGL);
 			//Laya.stage.scaleMode = Stage.SCALE_FULL;
 			Laya.stage.alignH = Stage.ALIGN_CENTER;
-			Laya.stage.alignV = Stage.ALIGN_MIDDLE;
-			Laya.stage.scaleMode = Stage.SCALE_EXACTFIT;
+			Laya.stage.alignV = Stage.ALIGN_TOP;
+			Laya.stage.scaleMode = Stage.SCALE_FIXED_WIDTH;
 			Laya.stage.screenMode = Stage.SCREEN_HORIZONTAL;
 			//Stat.show();
 			
@@ -61,18 +60,6 @@
 			
 			//var ly:BgLayer = new BgLayer(2);
 			//Laya.stage.addChild(ly);
-			
-			/*var hud:HUD = new HUD;
-			Laya.stage.addChild(hud);
-			
-			var ll:StarlingTextField=new StarlingTextField(150,20,"L I V E S",null,20,"#ffffff");
-			ll.x=150;
-			ll.y = 5;
-			Laya.stage.addChild(ll);
-			var lb:Label = new Label;
-			lb.text = "fdsaf";
-			lb.color="#ffffff"
-			Laya.stage.addChild(lb);*/			
 		}
 		
 		private function aniUrls(aniName:String,start:int,end:int):Array

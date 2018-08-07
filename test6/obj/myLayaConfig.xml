@@ -36,7 +36,7 @@
     </source-path>
   </compiler>
   <file-specs>
-    <path-element>D:\projs\wwwproj\weixingame\test6\src\LayaUISample.as</path-element>
+    <path-element>D:\projs\wwwproj\weixingame\test6\src\MiniGame.as</path-element>
   </file-specs>
   <default-background-color>#FFFFFF</default-background-color>
   <default-frame-rate>30</default-frame-rate>

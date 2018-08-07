@@ -43,10 +43,10 @@ package com.hsharma.hungryHero.gameElements
 		{
 			super();
 			this._layer = _layer;
-			this.on(Event.ADDED,this, onAddedToStage);
+			this.on(Event.ADDED, this, onAddedToStage);
 		}
 		
-		private var heights:Array = [null,768,318,229,124];
+		private var heights:Array = [0,768,318,229,124];
 		/**
 		 * On added to stage. 
 		 * @param event
@@ -54,7 +54,8 @@ package com.hsharma.hungryHero.gameElements
 		 */
 		private function onAddedToStage(event:Event):void
 		{
-			this.off(Event.ADDED, this,onAddedToStage);
+			this.off(Event.ADDED, this, onAddedToStage);
+			Laya.stage.on(Event.RESIZE, this, onResize);
 			
 			if (_layer == 1)
 			{
@@ -72,13 +73,18 @@ package com.hsharma.hungryHero.gameElements
 			}
 			
 			image1.x = 0;
-			image1.y = GameConstants.stageHeight - heights[_layer];//image1.height;
 			
 			image2.x = 1024//image2.getBounds().width;
-			image2.y = image1.y;
-			
 			this.addChild(image1);
 			this.addChild(image2);
+			
+			onResize();
+		}
+		
+		private function onResize():void 
+		{			
+			image1.y = Laya.stage.height - heights[_layer];//image1.height;
+			image2.y = image1.y;
 		}
 
 		/**

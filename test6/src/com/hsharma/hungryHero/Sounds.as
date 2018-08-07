@@ -72,42 +72,12 @@ package com.hsharma.hungryHero
 		
 		public static  function playMusic(path:String):void
         {
-            SoundManager.playMusic("res/sounds/"+path+".mp3",0);
+            SoundManager.playMusic("res/sounds/" + path + ".mp3", 0);
         }
 
         public static  function playSound(path:String):void
         {
-			if(Browser.onMiniGame){
-				var sa:Object=sounds[path];
-				if(sa==null){
-					sa=sounds[path]={};
-					sa.arr=[];
-				}
-				
-				if(sa.arr.length<5){
-					var a:Audio=new Audio();
-					a.src="res/sounds/" + path + ".mp3";
-					sa.arr.push(a);
-					sa.i=sa.arr.length-1;
-				}else{
-					sa.i++;
-					if(sa.i>=sa.arr.length){
-						sa.i=0;
-					}
-					a=sa.arr[sa.i];
-				}
-				
-					a.currentTime = 0
-					a.play()
-			}else{
-			var sc:SoundChannel = sounds[path];
-			if (sc==null){
-				sc = laya.media.SoundManager.playSound("res/sounds/" + path + ".mp3", 1);
-				sounds[path] = sc;
-			}else{
-				sc.play();
-			}
-			}
+			SoundManager.playSound("res/sounds/" + path + ".mp3", 1);
         }
         //export  function playGameSound(name:string,sex:number):void
         //{

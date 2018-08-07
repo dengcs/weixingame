@@ -1,19 +1,19 @@
-1,0.00,,0,Project command:f:\dcs\game\weixingame\share/.actionScriptProperties;iflash=false;windowshow=false;chromerun=false;quickcompile=true
-Project configuration:f:\dcs\game\weixingame\share/.actionScriptProperties.
-1,0.00,,0,output path:f:/dcs/game/weixingame/share/bin/h5/
-1,0.00,,0,Main Class:f:/dcs/game/weixingame/share/src/LayaUISample.as
+1,0.00,,0,Project command:d:\code\github\weixingame\share/.actionScriptProperties;iflash=false;windowshow=false;chromerun=false;quickcompile=true
+Project configuration:d:\code\github\weixingame\share/.actionScriptProperties.
+1,0.00,,0,output path:d:/code/github/weixingame/share/bin/h5/
+1,0.00,,0,Main Class:d:/code/github/weixingame/share/src/LayaUISample.as
 1,0.00,,0,output file:LayaUISample
-1,0.00,,0,compilerSourcePath f:/dcs/game/weixingame/share/libs/laya/src/
+1,0.00,,0,compilerSourcePath d:/code/github/weixingame/share/libs/laya/src/
 
-1,0.00,,0,Compile Path:f:/dcs/game/weixingame/share/src/
+1,0.00,,0,Compile Path:d:/code/github/weixingame/share/src/
 
-1,0.00,,0,Compile Path:f:/dcs/game/weixingame/share/libs/laya/src/
+1,0.00,,0,Compile Path:d:/code/github/weixingame/share/libs/laya/src/
 
-1,0.00,f:/dcs/game/weixingame/share/src,0,Collect
-1,0.00,f:/dcs/game/weixingame/share/libs/laya/src,0,Collect
+1,0.00,d:/code/github/weixingame/share/src,0,Collect
+1,0.00,d:/code/github/weixingame/share/libs/laya/src,0,Collect
 1,2.00,,0,read class message
-1,89.62,,0,Disable Flash3D f:/dcs/game/weixingame/share/src/LayaUISample.as
-12,89.62,f:/dcs/game/weixingame/share/bin/h5/LayaUISample.max.js,1207599,
-11,89.62,f:/dcs/game/weixingame/share/bin/h5/LayaUISample.max.html,895,
+1,89.62,,0,Disable Flash3D d:/code/github/weixingame/share/src/LayaUISample.as
+12,89.62,d:/code/github/weixingame/share/bin/h5/LayaUISample.max.js,1207573,
+11,89.62,d:/code/github/weixingame/share/bin/h5/LayaUISample.max.html,895,
 ******************************************************************************
 14,89.62,,0,

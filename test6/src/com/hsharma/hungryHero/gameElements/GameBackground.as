@@ -41,7 +41,7 @@ package com.hsharma.hungryHero.gameElements
 		private var _state:int;
 		
 		/** Game paused? */
-		private var _gamePaused:Boolean = false;
+		private var _gamePaused:Boolean = true;
 		
 		public function GameBackground()
 		{
@@ -58,7 +58,6 @@ package com.hsharma.hungryHero.gameElements
 		private function onAddedToStage(event:Event):void
 		{
 			off(Event.ADDED, this,onAddedToStage);
-			
 			bgLayer1 = new BgLayer(1);
 			bgLayer1.parallaxDepth = 0.02;
 			this.addChild(bgLayer1);
